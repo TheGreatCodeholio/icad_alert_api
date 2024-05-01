@@ -1,0 +1,39 @@
+:root {
+    --primary_fore: #205a9a;
+    --secondary_fore: #2F7ED5FF;
+    --tertiary_fore: #fac200;
+    --quatiary_fore: #ac1d22;
+
+    --primary_back: #2a2c3c;
+    --secondary_back: #171721;
+    --tertiary_back: #0f1017;
+    --quatiary_back: #205a9a;
+
+    --primary_text: #b7c2c0;
+    --secondary_text: #929a96;
+    --tertiary_text: #6b706b;
+    --quatiary_text: #f8c000;
+}
+
+body {
+    color: var(--secondary_text);
+    font-size: 16px;
+    width: 100%;
+    height: 100vh;
+}
+
+.footer {
+    background-color: var(--secondary_back);
+    color: var(--secondary_text);
+    font-size: 16px;
+    width: 100%;
+    height: 100vh;
+}
+
+.navbar-nav .nav-link.active, .navbar-nav .nav-link.show {
+    --bs-navbar-active-color: var(--quatiary_text); /* Color for active/clicked links */
+}
+
+.navbar-nav .nav-link.active, .navbar-nav .nav-link:hover {
+    color: var(--quatiary_text);
+}
