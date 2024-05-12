@@ -1,16 +1,22 @@
 import logging
+import re
 import time
 
 import redis
+
+from lib.alert_action_handler import run_global_actions, run_trigger_actions
+from lib.alert_filter_handler import get_alert_filters
 
 module_logger = logging.getLogger('icad_alerting_api.alert_processing')
 
 
 def process_call_data(db, rd, system_data, call_data):
-    process_result = {"tone_result": [], "transcript_filter": []}
-    tone_result = check_tone_triggers(rd, system_data, call_data)
-    if len(tone_result) >= 1:
-        process_result["tone_result"] = tone_result
+    process_result = {"alert_result": []}
+    alert_result = check_alert_triggers(db, rd, system_data, call_data)
+    process_result["alert_result"] = alert_result
+    if len(alert_result) >= 1:
+        # Process Global System Alerts
+        run_global_actions(db, rd, system_data, call_data)
 
     return process_result
 
@@ -35,7 +41,20 @@ def are_all_tone_conditions_met(conditions_required, conditions_met):
     return True
 
 
-def check_tone_triggers(rd, system_data, call_data):
+def get_alert_filter_status(trigger):
+    # Check if 'alert_filter_id' is present and not None
+    if trigger.get('alert_filter_id') is not None:
+        # Safely get 'trigger_alert_filters' list
+        alert_filters = trigger.get('trigger_alert_filters', [])
+
+        # Check if there is at least one filter and it has 'enabled' key
+        if alert_filters and 'enabled' in alert_filters[0]:
+            return alert_filters[0]['enabled']
+
+    return False
+
+
+def check_alert_triggers(db, rd, system_data, call_data):
     triggered_alerts = []
 
     alert_triggers = system_data.get('alert_triggers')
@@ -48,39 +67,55 @@ def check_tone_triggers(rd, system_data, call_data):
     excluded_id_list = [t["trigger_id"] for t in triggered_alert_list]
 
     for trigger in alert_triggers:
-        alert_data = {"two_tone": [], "long_tone": [], "hi_low_tone": []}
+        if not trigger.get("enabled"):
+            continue
+
         if trigger.get("trigger_id") in excluded_id_list:
             module_logger.warning(f"Ignoring {trigger.get('trigger_name')}")
             continue
+
+        alert_data = {"trigger_id": trigger.get('trigger_id'), "trigger_name": trigger.get('name'), "two_tone": [], "long_tone": [], "hi_low_tone": [], "alert_filter": []}
+
+        alert_filter_condition = get_alert_filter_status(trigger)
 
         conditions_required = {
             "two_tone": True if trigger.get('two_tone_a') is not None and trigger.get(
                 'two_tone_b') is not None else False,
             "long_tone": True if trigger.get('long_tone') is not None else False,
             "hi_low_tone": True if trigger.get('hi_low_tone_a') is not None and trigger.get(
-                'hi_low_tone_b') is not None else False
+                'hi_low_tone_b') is not None else False,
+            "alert_filter": alert_filter_condition
         }
-        conditions_met = {"two_tone": False, "long_tone": False, "hi_low_tone": False}
+        conditions_met = {"two_tone": False, "long_tone": False, "hi_low_tone": False, "alert_filter": False}
 
         # Check if no conditions are required
         if not any(conditions_required.values()):
             module_logger.debug(f"Skipping tone alert trigger {trigger.get('trigger_name')}. No conditions required.")
             continue
 
-        two_tone_matches = check_two_tone_triggers(trigger, call_data)
-        if len(two_tone_matches) >= 1:
-            conditions_met["two_tone"] = True
-            alert_data["two_tone"].extend(two_tone_matches)
+        if conditions_required.get('two_tone'):
+            two_tone_matches = check_two_tone_triggers(trigger, call_data)
+            if len(two_tone_matches) >= 1:
+                conditions_met["two_tone"] = True
+                alert_data["two_tone"].extend(two_tone_matches)
 
-        long_tone_matches = check_long_tone_triggers(trigger, call_data)
-        if len(long_tone_matches) >= 1:
-            conditions_met["long_tone"] = True
-            alert_data["long_tone"].extend(long_tone_matches)
+        if conditions_required.get('long_tone'):
+            long_tone_matches = check_long_tone_triggers(trigger, call_data)
+            if len(long_tone_matches) >= 1:
+                conditions_met["long_tone"] = True
+                alert_data["long_tone"].extend(long_tone_matches)
 
-        high_low_matches = check_hi_low_tone_triggers(trigger, call_data)
-        if len(high_low_matches) >= 1:
-            conditions_met["hi_low_tone"] = True
-            alert_data["hi_low_tone"].extend(high_low_matches)
+        if conditions_required.get('hi_low_tone'):
+            high_low_matches = check_hi_low_tone_triggers(trigger, call_data)
+            if len(high_low_matches) >= 1:
+                conditions_met["hi_low_tone"] = True
+                alert_data["hi_low_tone"].extend(high_low_matches)
+
+        if conditions_required.get('alert_filter'):
+            alert_filter_matches = check_alert_filter_triggers(db, trigger, call_data)
+            if len(alert_filter_matches) >= 1:
+                conditions_met["alert_filter"] = True
+                alert_data["alert_filter"].extend(alert_filter_matches)
 
         all_conditions_met = are_all_tone_conditions_met(conditions_required, conditions_met)
         if all_conditions_met:
@@ -95,6 +130,7 @@ def check_tone_triggers(rd, system_data, call_data):
             triggered_alerts.append(alert_data)
 
             # Start Alerting Process For Tones
+            run_trigger_actions(db, rd, trigger, call_data)
 
     return triggered_alerts
 
@@ -124,7 +160,6 @@ def check_two_tone_triggers(alert_trigger, call_data):
         if match_a and match_b:
             match_data = {
                 "tone_id": tone[2],
-                "trigger_name": alert_trigger.get('trigger_name'),
                 "tones_matched": f'{tone[0]}, {tone[1]}'
             }
 
@@ -156,7 +191,6 @@ def check_long_tone_triggers(alert_trigger, call_data):
         if match_tone:
             match_data = {
                 "tone_id": tone[1],
-                "trigger_name": alert_trigger.get('trigger_name'),
                 "tones_matched": f'{tone[0]}'
             }
 
@@ -190,13 +224,55 @@ def check_hi_low_tone_triggers(alert_trigger, call_data):
         if match_hi and match_low:
             match_data = {
                 "tone_id": tone[2],
-                "trigger_name": alert_trigger.get('trigger_name'),
                 "tones_matched": f'{tone[0]}, {tone[1]}'
             }
 
             matches_found.append(match_data)
 
             module_logger.debug(f"Match found for {alert_trigger.get('trigger_name')}")
+
+    return matches_found
+
+
+def check_alert_filter_triggers(db, alert_trigger, call_data):
+    # Initialize lists for matched keywords and exclusion keywords
+    matches_found = []
+    exclusion_detected = False
+
+    alert_filter_id = alert_trigger.get("alert_filter_id")
+    if not alert_filter_id:
+        return matches_found
+
+    # Get Alert Filter Data For Trigger from Database
+    alert_filter_data = get_alert_filters(db, alert_filter_id=alert_filter_id)
+
+    keywords = alert_filter_data.get("result", [])[0].get("filter_keywords")
+    module_logger.debug(keywords)
+
+    transcript = call_data.get("transcript", []).get("transcript", "")
+
+    if not transcript:
+        return matches_found
+
+    # Normalize the input text
+    normalized_text = normalize(transcript)
+    module_logger.debug(normalized_text)
+
+    # Iterate through keywords
+    for keyword in keywords:
+        if keyword['enabled']:
+            # Normalize the keyword
+            normalized_keyword = normalize(keyword['keyword'])
+            # Check if the keyword is in the text
+            if normalized_keyword in normalized_text:
+                if keyword['is_excluded']:
+                    exclusion_detected = True
+                elif not keyword['is_excluded']:
+                    matches_found.append({'keyword': normalized_keyword})
+
+    # Check if exclusion was detected, if so, return an empty list
+    if exclusion_detected:
+        return []
 
     return matches_found
 
@@ -261,3 +337,13 @@ def get_active_alerts_cache(rd, list_name):
     except redis.RedisError as error:
         module_logger.error(f"Error retrieving list {list_name}: {error}")
         return []
+
+
+# Helper function to normalize text
+def normalize(s):
+    # Remove apostrophes to prevent contractions from splitting incorrectly
+    s = s.replace("'", "")
+    # Replace one or more non-word characters (including multiple spaces) with a single space
+    s = re.sub(r'\W+', ' ', s.lower())
+    # Replace multiple spaces with a single space
+    return re.sub(r'\s+', ' ', s).strip()

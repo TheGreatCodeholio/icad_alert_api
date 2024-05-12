@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h4 id="trigger_title" class="text-center">{% block title %} Radio System Triggers {% endblock %}</h4>
+    <div class="row">
+        <!-- Toggle Button for Small Screens -->
+        <button class="btn btn-primary d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarCollapse" aria-expanded="false" aria-controls="sidebarCollapse">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 bg-body-tertiary collapse d-md-block" id="sidebarCollapse">
+            <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white">
+                <ul id="trigger_sidebar" class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item mb-1">
+                        <button class="nav-link" id="trigger-add-tab" data-bs-toggle="tab"
+                                data-bs-target="#trigger-add-tab-pane" type="button" role="tab"
+                                aria-controls="trigger-add-tab-pane" aria-selected="false">Add Trigger
+                        </button>
+                    </li>
+                    <hr>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 col-lg-10">
+            <div class="tab-content" id="triggerTabContent">
+                <div class="tab-pane fade" id="trigger-add-tab-pane" role="tabpanel" aria-labelledby="trigger-add-tab" tabindex="0">
+                    <div class="row">
+                        <div class="col mt-5">
+                            <form id="addTriggerForm" class="d-block" action="/admin/add_trigger" method="post">
+                                <div class="mb-3">
+                                    <label for="systemId" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Enter System ID">System ID</label>
+                                    <input type="number" class="form-control" id="systemId" name="system_id" required readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="triggerName" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Enter Trigger Name">Trigger Name</label>
+                                    <input type="text" class="form-control" id="triggerName" name="trigger_name" placeholder="Station 12" required>
+                                </div>
+
+                                <!-- Group for Two-Tone settings -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="twoToneA" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Frequency of tone A">Two-Tone A (Hz)</label>
+                                        <input type="number" step="0.1" class="form-control" id="twoToneA" name="two_tone_a">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="twoToneALength" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration of tone A in seconds">Two-Tone A Length (s)</label>
+                                        <input type="number" step="0.1" class="form-control" id="twoToneALength" name="two_tone_a_length" value="0.8">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="twoToneB" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Frequency of tone B">Two-Tone B (Hz)</label>
+                                        <input type="number" step="0.1" class="form-control" id="twoToneB" name="two_tone_b">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="twoToneBLength" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration of tone B in seconds">Two-Tone B Length (s)</label>
+                                        <input type="number" step="0.1" class="form-control" id="twoToneBLength" name="two_tone_b_length" value="2.8">
+                                    </div>
+                                </div>
+                                <!-- Group for Long Tone settings -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="longTone" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Frequency of the long tone">Long Tone (Hz)</label>
+                                        <input type="number" step="0.1" class="form-control" id="longTone" name="long_tone">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="longToneLength" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Duration of the long tone">Long Tone Length (ms)</label>
+                                        <input type="number" step="0.1" class="form-control" id="longToneLength" name="long_tone_length" value="3.8">
+                                    </div>
+                                </div>
+
+                                <!-- Group for Hi-Low Tone settings -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="hiLowToneA" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Frequency of hi-low tone A">Hi-Low Tone A (Hz)</label>
+                                        <input type="number" step="0.1" class="form-control" id="hiLowToneA" name="hi_low_tone_a">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="hiLowToneB" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Frequency of hi-low tone B">Hi-Low Tone B (Hz)</label>
+                                        <input type="number" step="0.1" class="form-control" id="hiLowToneB" name="hi_low_tone_b">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="alertFilterId" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="ID of the alert filter">Alert Filter ID</label>
+                                        <input type="number" class="form-control" id="alertFilterId" name="alert_filter_id">
+                                    </div>
+                                </div>
+
+                                <!-- Miscellaneous settings -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="toneTolerance" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Tolerance for tone detection percent represented by a whole number">Tone Tolerance (%)</label>
+                                        <input type="number" class="form-control" id="toneTolerance" name="tone_tolerance" value="2.0">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="ignoreTime" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Time to ignore in seconds after trigger activated.">Ignore Time (s)</label>
+                                        <input type="number" step="0.1" class="form-control" id="ignoreTime" name="ignore_time" value="300.0">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="triggerStreamUrl" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="URL for the trigger stream">Trigger Stream URL</label>
+                                        <input type="url" class="form-control" id="triggerStreamUrl" name="trigger_stream_url" placeholder="https://scanner.ccfirewire.com">
+                                    </div>
+                                </div>
+                                <div class="mb-3 form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enabledSwitch" name="enabled" checked>
+                                    <label class="form-check-label" for="enabledSwitch" data-bs-toggle="tooltip" data-bs-placement="top" title="Toggle to enable or disable this trigger">Enabled</label>
+                                </div>
+                                <div class="col text-end">
+                                    <button id="submit_add_trigger" type="submit" class="btn btn-outline-success">Submit</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        window.region = "{{ region }}"
+    </script>
+    <script type="module">
+        import {SystemEditor} from '{{ url_for('static', filename='js/system_editor/editor.js') }}';
+        const editor = new SystemEditor();
+    </script>
+{% endblock %}

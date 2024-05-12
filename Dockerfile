@@ -1,6 +1,12 @@
 # Use an official Python Alpine Image
 FROM python:3.12-alpine
 
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+RUN addgroup -g ${GROUP_ID} icad && \
+    adduser -u ${USER_ID} -G icad -D icad
+
 LABEL maintainer="ian@icarey.net"
 
 # Set the working directory in the container
@@ -30,6 +36,8 @@ RUN pip install --upgrade pip
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+USER icad
 
 # Run app.py when the container launches
 CMD ["gunicorn", "-b", "0.0.0.0:9911", "app:app"]

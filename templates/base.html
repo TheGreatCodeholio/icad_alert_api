@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>LLM Transcript Editor</title>
+    <title>iCAD Alerting</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
     <!-- Font Awesome -->
     <link href="{{ url_for('static', filename='font_awesome/css/all.css') }}" rel="stylesheet"/>
@@ -20,7 +20,33 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg bg-transparent" style="height: 50px">
+<div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginModalLabel">Log In</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form role="form" action="/login" method="post">
+                    <div class="mb-3">
+                        <label for="username"><i class="fa fa-user"></i> Username</label>
+                        <input type="text" name="username" class="form-control" id="username"
+                               placeholder="Enter username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password"><i class="fa fa-eye"></i> Password</label>
+                        <input type="password" name="password" class="form-control" id="password"
+                               placeholder="Password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Log In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="navbar navbar-expand-lg fixed-top bg-dark" style="height: 50px">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">
             <img
@@ -30,8 +56,7 @@
                     loading="lazy"
             />
         </a>
-        <button class="navbar-toggler" type="button" data-mdb-toggle="collapse" data-mdb-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -39,36 +64,62 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('index') }}">Home</a>
                 </li>
+                {% if session.get('authenticated') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_edit_system') }}">Systems</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_edit_filter') }}">Filters</a>
+                    </li>
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                {% if not session.get('authenticated') %}
+                    <!-- Show Log In button if not logged in -->
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginModal">Log
+                            In
+                        </button>
+                    </li>
+                {% else %}
+                    <!-- Show dropdown menu if logged in -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Admin Menu
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+{#                            <a class="dropdown-item" href="{{ url_for('edit_systems') }}">System Config</a>#}
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                        </div>
+                    </li>
+                {% endif %}
             </ul>
         </div>
-
     </div>
 </nav>
 
-<hr>
-<div class="container container-fluid" style="padding-bottom: 50px; padding-top: 50px;">
-    <div id="alert_list">
-        {% for category, message in get_flashed_messages(with_categories=true) %}
-            <div id="alert" class="alert alert-{{ category }}" role="alert">{{ message }}</div>
-        {% endfor %}
-    </div>
+<div class="container-fluid" style="padding-bottom: 50px; padding-top: 50px;">
     {% block content %} {% endblock %}
 </div>
 
-<div class="clear"></div>
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3">
+        <!-- Toasts will be added here dynamically -->
+    </div>
+</div>
+
 <!-- Footer -->
-<footer class="bg-light fixed-bottom text-center py-3" style="height: 50px" >
+<footer class="footer fixed-bottom text-center py-3" style="height: 50px" >
     <div class="container">
         <span>&copy; 2023 iCarey Software Solutions</span>
     </div>
 </footer>
 <!-- Bootstrap 5 JS -->
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-
-<script type="text/javascript">
-    if (document.getElementById('alert') != null) {
-        window.setTimeout("document.getElementById('alert').style.display='none';", 3000);
-    }
-</script>
+{% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="flash-message d-none" data-category="{{ category }}" data-message="{{ message }}"></div>
+{% endfor %}
 </body>
 </html>

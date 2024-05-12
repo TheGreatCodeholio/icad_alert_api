@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h4 class="text-center">{% block title %} Radio Systems{% endblock %}</h4>
+    <div class="row">
+        <!-- Toggle Button for Small Screens -->
+        <button class="btn btn-primary d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarCollapse" aria-expanded="false" aria-controls="sidebarCollapse">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 bg-body-tertiary collapse d-md-block" id="sidebarCollapse">
+            <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white">
+                <ul id="system_sidebar" class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item mb-1">
+                        <button class="nav-link" id="system-add-tab" data-bs-toggle="tab"
+                                data-bs-target="#system-add-tab-pane" type="button" role="tab"
+                                aria-controls="system-add-tab-pane" aria-selected="false">Add System
+                        </button>
+                    </li>
+                    <hr>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 col-lg-10">
+            <div class="tab-content" id="systemTabContent">
+                <div class="tab-pane fade" id="system-add-tab-pane" role="tabpanel" aria-labelledby="system-add-tab"
+                     tabindex="0">
+                    <div class="row">
+                        <div class="col mt-5">
+                            <form id="addSystemForm" class="d-block" action="/admin/add_system" method="post">
+                                <div class="form-group mb-3">
+                                    <label for="systemShortName">System Short Name</label>
+                                    <input id="systemShortName" class="form-control" type="text"
+                                           name="system_short_name" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="systemName">System Name</label>
+                                    <input id="systemName" class="form-control" type="text" name="system_name" required>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="systemCounty">System County</label>
+                                    <input id="systemCounty" class="form-control" type="text" name="system_county">
+                                </div>
+
+                                {% if region == "US" %}
+                                    <div class="form-group mb-3">
+                                        <label for="systemState">State</label>
+                                        <select id="systemState" name="system_state" class="form-control" required>
+                                            <option value="">Select State</option>
+                                            <option value="AL">Alabama</option>
+                                            <option value="AK">Alaska</option>
+                                            <option value="AZ">Arizona</option>
+                                            <option value="AR">Arkansas</option>
+                                            <option value="CA">California</option>
+                                            <option value="CO">Colorado</option>
+                                            <option value="CT">Connecticut</option>
+                                            <option value="DE">Delaware</option>
+                                            <option value="DC">District of Columbia</option>
+                                            <option value="FL">Florida</option>
+                                            <option value="GA">Georgia</option>
+                                            <option value="HI">Hawaii</option>
+                                            <option value="ID">Idaho</option>
+                                            <option value="IL">Illinois</option>
+                                            <option value="IN">Indiana</option>
+                                            <option value="IA">Iowa</option>
+                                            <option value="KS">Kansas</option>
+                                            <option value="KY">Kentucky</option>
+                                            <option value="LA">Louisiana</option>
+                                            <option value="ME">Maine</option>
+                                            <option value="MD">Maryland</option>
+                                            <option value="MA">Massachusetts</option>
+                                            <option value="MI">Michigan</option>
+                                            <option value="MN">Minnesota</option>
+                                            <option value="MS">Mississippi</option>
+                                            <option value="MO">Missouri</option>
+                                            <option value="MT">Montana</option>
+                                            <option value="NE">Nebraska</option>
+                                            <option value="NV">Nevada</option>
+                                            <option value="NH">New Hampshire</option>
+                                            <option value="NJ">New Jersey</option>
+                                            <option value="NM">New Mexico</option>
+                                            <option value="NY">New York</option>
+                                            <option value="NC">North Carolina</option>
+                                            <option value="ND">North Dakota</option>
+                                            <option value="OH">Ohio</option>
+                                            <option value="OK">Oklahoma</option>
+                                            <option value="OR">Oregon</option>
+                                            <option value="PA">Pennsylvania</option>
+                                            <option value="RI">Rhode Island</option>
+                                            <option value="SC">South Carolina</option>
+                                            <option value="SD">South Dakota</option>
+                                            <option value="TN">Tennessee</option>
+                                            <option value="TX">Texas</option>
+                                            <option value="UT">Utah</option>
+                                            <option value="VT">Vermont</option>
+                                            <option value="VA">Virginia</option>
+                                            <option value="WA">Washington</option>
+                                            <option value="WV">West Virginia</option>
+                                            <option value="WI">Wisconsin</option>
+                                            <option value="WY">Wyoming</option>
+                                        </select>
+                                    </div>
+                                {% elif region == "CA" %}
+                                    <div class="form-group mb-3">
+                                        <label for="system_state">Province</label>
+                                        <select id="system_state" name="system_state" class="form-control" required>
+                                            <option value="AB">Alberta</option>
+                                            <option value="BC">British Columbia</option>
+                                            <option value="MB">Manitoba</option>
+                                            <option value="NB">New Brunswick</option>
+                                            <option value="NL">Newfoundland and Labrador</option>
+                                            <option value="NS">Nova Scotia</option>
+                                            <option value="ON">Ontario</option>
+                                            <option value="PE">Prince Edward Island</option>
+                                            <option value="QC">Quebec</option>
+                                            <option value="SK">Saskatchewan</option>
+                                            <option value="NT">Northwest Territories</option>
+                                            <option value="NU">Nunavut</option>
+                                            <option value="YT">Yukon</option>
+                                        </select>
+                                    </div>
+                                {% endif %}
+                                {% if region == "US" %}
+                                    <div class="form-group mb-3">
+                                        <label for="systemFIPS">System FIPS Code</label>
+                                        <input id="systemFIPS" class="form-control" type="text" name="system_fips">
+                                    </div>
+                                {% elif region == "CA" %}
+                                    <div class="form-group mb-3">
+                                        <label for="systemFIPS">System SGC Code</label>
+                                        <input id="systemFIPS" class="form-control" type="text" name="system_fips">
+                                    </div>
+                                {% endif %}
+                                <div class="col text-end">
+                                    <button type="submit" class="btn btn-outline-success"
+                                            id="submitAddRadioSystemForm">Add System
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        window.region = "{{ region }}"
+    </script>
+    <script type="module">
+        import {SystemEditor} from '{{ url_for('static', filename='js/system_editor/editor.js') }}'; // Adjust the import path as necessary
+        const editor = new SystemEditor();
+    </script>
+{% endblock %}

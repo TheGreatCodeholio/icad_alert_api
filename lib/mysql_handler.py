@@ -1,6 +1,8 @@
 import logging
 import math
+import time
 
+import bcrypt
 import mysql.connector
 import mysql.connector.pooling as pooling
 
@@ -28,14 +30,49 @@ class MySQLDatabase:
             "user": config_data["mysql"]["user"],
             "password": config_data["mysql"]["password"],
             "database": config_data["mysql"]["database"],
-            "port": config_data["mysql"]["port"]
+            "port": int(config_data["mysql"]["port"])
         }
+
+        module_logger.debug(self.dbconfig)
 
         self._connections_in_use = 0
         self._pool_size = 25
 
         self.pool = pooling.MySQLConnectionPool(pool_name="icad_alerting", pool_size=self._pool_size,
                                                 **self.dbconfig)
+
+    def initialize_db(self):
+
+        query = "SELECT * FROM users WHERE user_username = %s"
+        params = ("admin",)
+        try:
+            admin_user = self.execute_query(query, params, fetch_mode="one")
+        except mysql.connector.Error as e:
+            module_logger.error(f"Failed to query database: {e}")
+            return False
+
+        if not admin_user['result']:
+            try:
+                password_hash = bcrypt.hashpw("admin".encode(), bcrypt.gensalt())
+                query = "INSERT INTO users (user_username, user_password) VALUES (%s, %s)"
+                params = ('admin', password_hash)
+                self.execute_commit(query, params)
+
+                query = "SELECT user_id FROM users WHERE user_username = %s"
+                admin_user_id = self.execute_query(query, params=("admin",), fetch_mode="one")['result']['user_id']
+
+                query = (
+                    "INSERT INTO user_security (user_id, is_active, last_login_date, failed_login_attempts, account_locked_until) VALUES (%s, 1, %s, 0, 0)")
+                params = (admin_user_id, time.time())
+                self.execute_commit(query, params)
+                module_logger.info("Admin user created successfully.")
+                return True
+            except mysql.connector.Error as e:
+                module_logger.error(f"Failed to create admin user: {e}")
+                return False
+        else:
+            module_logger.info("Admin user already exists.")
+            return True
 
     def _acquire_connection(self):
         self._connections_in_use += 1

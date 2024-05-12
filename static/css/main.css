@@ -1,5 +1,5 @@
 :root {
-    --primary_fore: #205a9a;
+    --primary_fore: #ca161d;
     --secondary_fore: #2F7ED5FF;
     --tertiary_fore: #fac200;
     --quatiary_fore: #ac1d22;
@@ -30,10 +30,64 @@ body {
     height: 100vh;
 }
 
+.navbar {
+    background-color: var(--secondary_back);
+    color: var(--secondary_text);
+    font-size: 16px;
+}
+
 .navbar-nav .nav-link.active, .navbar-nav .nav-link.show {
-    --bs-navbar-active-color: var(--quatiary_text); /* Color for active/clicked links */
+    --bs-navbar-active-color: var(--primary_fore); /* Color for active/clicked links */
 }
 
 .navbar-nav .nav-link.active, .navbar-nav .nav-link:hover {
-    color: var(--quatiary_text);
+    color: var(--primary_fore);
+}
+
+.sidebar {
+    min-height: 100vh;
+}
+@media (max-width: 768px) {
+    #sidebarCollapse {
+        width: 250px; /* Adjust width as necessary */
+        height: auto; /* Height adjusts to content */
+        overflow-y: auto; /* Allows scrolling within the sidebar if content overflows */
+    }
+    .sidebar.collapse {
+        display: none; /* Ensures it does not display when collapsed */
+    }
+    .sidebar.collapsing {
+        position: relative; /* Ensures position is maintained during transition */
+        height: auto; /* Ensures height adjusts to content during transition */
+        transition: height 0.35s ease;
+    }
+}
+
+.sidebar.collapse {
+    display: none; /* Ensures it does not display when collapsed */
+}
+
+.sidebar.collapsing {
+    position: fixed; /* Ensures position is maintained during transition */
+    height: auto; /* Ensures height adjusts to content during transition */
+    transition: height 0.35s ease;
+}
+
+.form-check .form-check-input {
+    float: none;
+}
+
+tr td.form-check.form-switch {
+    display: table-cell;
+}
+
+@media (min-width: 768px) {
+    #sidebarCollapse {
+        display: block !important; /* Always display sidebar on larger screens */
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: 100vh; /* Ensures sidebar extends to full viewport height */
+        overflow-y: auto; /* Allows scrolling within the sidebar if content overflows */
+    }
 }
