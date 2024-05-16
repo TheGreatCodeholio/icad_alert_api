@@ -10,13 +10,13 @@ from lib.alert_filter_handler import get_alert_filters
 module_logger = logging.getLogger('icad_alerting_api.alert_processing')
 
 
-def process_call_data(db, rd, system_data, call_data):
+def process_call_data(db, rd, global_config_data, system_data, call_data):
     process_result = {"alert_result": []}
-    alert_result = check_alert_triggers(db, rd, system_data, call_data)
+    alert_result = check_alert_triggers(db, rd, global_config_data, system_data, call_data)
     process_result["alert_result"] = alert_result
     if len(alert_result) >= 1:
         # Process Global System Alerts
-        run_global_actions(db, rd, system_data, call_data)
+        run_global_actions(global_config_data, system_data, alert_result, call_data)
 
     return process_result
 
@@ -54,12 +54,12 @@ def get_alert_filter_status(trigger):
     return False
 
 
-def check_alert_triggers(db, rd, system_data, call_data):
+def check_alert_triggers(db, rd, global_config_data, system_data, call_data):
     triggered_alerts = []
 
     alert_triggers = system_data.get('alert_triggers')
     if not len(alert_triggers):
-        module_logger.debug("No Alert Triggers in System Data. Skipping Tone Check")
+        module_logger.warning("No Alert Triggers in System Data. Skipping Tone Check")
         return triggered_alerts
 
     # Get the list of excluded trigger ids once for this system
@@ -74,7 +74,10 @@ def check_alert_triggers(db, rd, system_data, call_data):
             module_logger.warning(f"Ignoring {trigger.get('trigger_name')}")
             continue
 
-        alert_data = {"trigger_id": trigger.get('trigger_id'), "trigger_name": trigger.get('name'), "two_tone": [], "long_tone": [], "hi_low_tone": [], "alert_filter": []}
+        alert_data = {"trigger_id": trigger.get('trigger_id'), "trigger_name": trigger.get('trigger_name'),
+                      "timestamp": time.time(), "facebook_enabled": trigger.get("enable_facebook", False),
+                      "telegram_enabled": trigger.get("enable_telegram", False),
+                      "two_tone": [], "long_tone": [], "hi_low_tone": [], "alert_filter": []}
 
         alert_filter_condition = get_alert_filter_status(trigger)
 
@@ -90,7 +93,7 @@ def check_alert_triggers(db, rd, system_data, call_data):
 
         # Check if no conditions are required
         if not any(conditions_required.values()):
-            module_logger.debug(f"Skipping tone alert trigger {trigger.get('trigger_name')}. No conditions required.")
+            module_logger.warning(f"Skipping tone alert trigger {trigger.get('trigger_name')}. No conditions required.")
             continue
 
         if conditions_required.get('two_tone'):
@@ -130,7 +133,7 @@ def check_alert_triggers(db, rd, system_data, call_data):
             triggered_alerts.append(alert_data)
 
             # Start Alerting Process For Tones
-            run_trigger_actions(db, rd, trigger, call_data)
+            run_trigger_actions(global_config_data, system_data, trigger, [alert_data], call_data)
 
     return triggered_alerts
 
@@ -139,8 +142,8 @@ def check_two_tone_triggers(alert_trigger, call_data):
     matches_found = []
 
     # Simplify the extraction of match_list
-    match_list = [(tone['detected'][0], tone['detected'][1], tone["tone_id"])
-                  for tone in call_data.get("tones", {}).get("two_tone", [])]
+    match_list = [(tone['detected'][0], tone['detected'][1], tone["tone_id"],
+                   tone["tone_a_length"], tone["tone_b_length"]) for tone in call_data.get("tones", {}).get("two_tone", [])]
 
     a_tone, b_tone = alert_trigger.get("two_tone_a"), alert_trigger.get("two_tone_b")
     # Skip the trigger if either two_tone_a or tow_tone_b is missing
@@ -150,14 +153,13 @@ def check_two_tone_triggers(alert_trigger, call_data):
     tolerance_a, tolerance_b = get_tolerance(alert_trigger, "two_tone_a"), get_tolerance(alert_trigger, "two_tone_b")
     detector_ranges = [(a_tone - tolerance_a, a_tone + tolerance_a), (b_tone - tolerance_b, b_tone + tolerance_b)]
 
-    # tone_a_length = alert_trigger.get("two_tone_a_length", 0.8)
-    # tone_b_length = alert_trigger.get("two_tone_b_length", 2.3)
+    tone_a_length = alert_trigger.get("two_tone_a_length", 0.8)
+    tone_b_length = alert_trigger.get("two_tone_b_length", 2.3)
 
     for tone in match_list:
-        match_a, match_b = is_within_range(tone[0], detector_ranges[0]), is_within_range(tone[1],
-                                                                                         detector_ranges[1])
+        match_a, match_b = is_within_range(tone[0], detector_ranges[0]), is_within_range(tone[1], detector_ranges[1])
 
-        if match_a and match_b:
+        if match_a and match_b and tone[3] >= tone_a_length and tone[4] >= tone_b_length:
             match_data = {
                 "tone_id": tone[2],
                 "tones_matched": f'{tone[0]}, {tone[1]}'
@@ -174,7 +176,7 @@ def check_long_tone_triggers(alert_trigger, call_data):
     matches_found = []
 
     # Extract long_tone details
-    match_list = [(tone['detected'], tone["tone_id"])
+    match_list = [(tone['detected'], tone["tone_id"], tone["length"])
                   for tone in call_data.get("tones", {}).get("long_tone", [])]
 
     long_tone = alert_trigger.get("long_tone")
@@ -188,7 +190,7 @@ def check_long_tone_triggers(alert_trigger, call_data):
     for tone in match_list:
         match_tone = is_within_range(tone[0], tone_range)
 
-        if match_tone:
+        if match_tone and tone[2] >= required_length:
             match_data = {
                 "tone_id": tone[1],
                 "tones_matched": f'{tone[0]}'
@@ -205,12 +207,14 @@ def check_hi_low_tone_triggers(alert_trigger, call_data):
     matches_found = []
 
     # Extract high-low tones detected from call_data
-    match_list = [(tone['detected'][0], tone['detected'][1], tone["tone_id"])
+    match_list = [(tone['detected'][0], tone['detected'][1], tone["tone_id"], tone["alternations"])
                   for tone in call_data.get("tones", {}).get("hl_tone", [])]
 
     hi_tone, low_tone = alert_trigger.get("hi_low_tone_a"), alert_trigger.get("hi_low_tone_b")
     if not hi_tone or not low_tone:
         return matches_found
+
+    min_alternations = alert_trigger.get("hi_low_alternations", 4)
 
     tolerance_hi, tolerance_low = get_tolerance(alert_trigger, "hi_low_tone_a"), get_tolerance(alert_trigger,
                                                                                                "hi_low_tone_b")
@@ -221,7 +225,7 @@ def check_hi_low_tone_triggers(alert_trigger, call_data):
         match_hi, match_low = is_within_range(tone[0], tone_range[0]), is_within_range(tone[1],
                                                                                        tone_range[1])
 
-        if match_hi and match_low:
+        if match_hi and match_low and tone[3] >= min_alternations:
             match_data = {
                 "tone_id": tone[2],
                 "tones_matched": f'{tone[0]}, {tone[1]}'

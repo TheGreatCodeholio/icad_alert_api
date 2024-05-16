@@ -89,6 +89,9 @@ def get_alert_triggers(db, system_ids=None, trigger_id=None):
     for row in result["result"]:
         row_dict = dict(row)
 
+        row_dict["enable_facebook"] = bool(int(row_dict.get('enable_facebook')))
+        row_dict["enable_telegram"] = bool(int(row_dict.get('enable_telegram')))
+
         # Type conversion for numeric and JSON fields
         if 'ignore_time' in row_dict and row_dict['ignore_time']:
             row_dict['ignore_time'] = float(row_dict['ignore_time'])
@@ -110,6 +113,8 @@ def get_alert_triggers(db, system_ids=None, trigger_id=None):
             row_dict['hi_low_tone_a'] = float(row_dict['hi_low_tone_a'])
         if 'hi_low_tone_b' in row_dict and row_dict['hi_low_tone_b']:
             row_dict['hi_low_tone_b'] = float(row_dict['hi_low_tone_b'])
+        if 'hi_low_alternations' in row_dict and row_dict['hi_low_tone_b']:
+            row_dict['hi_low_alternations'] = int(row_dict['hi_low_alternations'])
 
         # Processing 'trigger_emails'
         if row_dict['trigger_emails']:
@@ -161,14 +166,15 @@ def add_alert_trigger(db, trigger_data):
 
     query = (f'INSERT INTO alert_triggers (system_id, trigger_name, '
              f'two_tone_a, two_tone_a_length, two_tone_b, two_tone_b_length, '
-             f'long_tone, long_tone_length, hi_low_tone_a, hi_low_tone_b, '
-             f'alert_filter_id, tone_tolerance, ignore_time, trigger_stream_url, enable_facebook, enable_telegram, enabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
+             f'long_tone, long_tone_length, hi_low_tone_a, hi_low_tone_b, hi_low_alternations,'
+             f'alert_filter_id, tone_tolerance, ignore_time, trigger_stream_url, enable_facebook, enable_telegram, enabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
     params = (trigger_data.get('system_id'),
               trigger_data.get('trigger_name'),
               trigger_data.get('two_tone_a') or None, trigger_data.get('two_tone_a_length') or None,
               trigger_data.get('two_tone_b') or None, trigger_data.get('two_tone_b_length') or None,
               trigger_data.get('long_tone') or None, trigger_data.get('long_tone_length') or None,
               trigger_data.get('hi_low_tone_a') or None, trigger_data.get('hi_low_tone_b') or None,
+              trigger_data.get('hi_low_alternations', 4),
               trigger_data.get('alert_filter_id') or None, trigger_data.get('tone_tolerance', 2.0),
               trigger_data.get('ignore_time', 300.0), trigger_data.get('trigger_stream_url') or None,
               0, 0, enabled)
@@ -183,10 +189,8 @@ def add_alert_trigger(db, trigger_data):
 
 def insert_alert_trigger_default(db, trigger_data):
     db.execute_commit(
-        "INSERT INTO alert_trigger_pushover_settings (trigger_id, pushover_body) VALUES (%s, %s)",
-        (trigger_data.get('trigger_id'),
-         "<font color=\"red\"><b>{trigger_name}</b></font><br><br><a href=\"{audio_url}\">Click for Dispatch "
-         "Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>")
+        "INSERT INTO alert_trigger_pushover_settings (trigger_id,) VALUES (%s)",
+        (trigger_data.get('trigger_id'),)
     )
 
 
@@ -225,11 +229,14 @@ def update_alert_trigger_general(db, trigger_data):
                 "message": f"Trigger Doesn't Exist: {trigger_data.get('trigger_name')}", "result": []}
 
     enabled = 1 if trigger_data.get("enabled") else 0
+    facebook_enabled = 1 if trigger_data.get("enable_facebook") else 0
+    telegram_enabled = 1 if trigger_data.get("enable_telegram") else 0
 
-    query = f"UPDATE alert_triggers SET trigger_name = %s, tone_tolerance = %s, ignore_time = %s, trigger_stream_url = %s, enabled = %s WHERE system_id = %s AND trigger_id = %s"
+    query = f"UPDATE alert_triggers SET trigger_name = %s, tone_tolerance = %s, ignore_time = %s, trigger_stream_url = %s, enable_facebook = %s, enable_telegram = %s, enabled = %s WHERE system_id = %s AND trigger_id = %s"
     params = (trigger_data.get('trigger_name'), trigger_data.get('tone_tolerance', 2.0),
               trigger_data.get('ignore_time', 300.0), trigger_data.get('trigger_stream_url') or None,
-              enabled, trigger_data.get('system_id'), trigger_data.get('trigger_id'))
+              facebook_enabled, telegram_enabled,
+              enabled , trigger_data.get('system_id'), trigger_data.get('trigger_id'))
 
     update_result = db.execute_commit(query, params)
     return update_result
@@ -306,8 +313,9 @@ def update_alert_trigger_hi_low_tone(db, trigger_data):
         return {"success": False,
                 "message": f"Trigger Doesn't Exist: {trigger_data.get('trigger_name')}", "result": []}
 
-    query = f"UPDATE alert_triggers SET hi_low_tone_a = %s, hi_low_tone_b = %s WHERE system_id = %s AND trigger_id = %s"
+    query = f"UPDATE alert_triggers SET hi_low_tone_a = %s, hi_low_tone_b = %s, hi_low_alternations = %s WHERE system_id = %s AND trigger_id = %s"
     params = (trigger_data.get('hi_low_tone_a') or None, trigger_data.get('hi_low_tone_b') or None,
+              trigger_data.get('hi_low_alternations', 4),
               trigger_data.get('system_id'), trigger_data.get('trigger_id'))
 
     update_result = db.execute_commit(query, params)

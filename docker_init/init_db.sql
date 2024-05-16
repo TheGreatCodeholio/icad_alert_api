@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS `alert_triggers`
     `long_tone_length`   decimal(6, 1)          DEFAULT 3.8,
     `hi_low_tone_a`      decimal(6, 1)          DEFAULT NULL,
     `hi_low_tone_b`      decimal(6, 1)          DEFAULT NULL,
+    `hi_low_alternations` int(11)               DEFAULT 4,
     `alert_filter_id`    int(11)                DEFAULT NULL,
     `tone_tolerance`     decimal(6, 1)          DEFAULT 2.0,
     `ignore_time`        decimal(6, 1) NOT NULL DEFAULT 300.0,

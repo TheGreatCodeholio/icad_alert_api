@@ -1,4 +1,12 @@
 import json
+import logging
+import traceback
+from datetime import datetime, timezone
+
+import requests
+from requests import HTTPError, Timeout, RequestException
+
+module_logger = logging.getLogger("icad_alerting_api.webhook_handler")
 
 
 def update_system_webhooks(db, system_id, webhooks_data):
@@ -95,3 +103,95 @@ def update_trigger_webhooks(db, trigger_id, webhooks_data):
         result = {"success": False, "message": f"Failed to update webhooks: {e}"}
 
     return result
+
+
+class WebHook:
+    def __init__(self, global_config_data, system_config_data, trigger_config_data=None):
+        self.global_config_data = global_config_data
+        self.system_config_data = system_config_data
+        self.trigger_config_data = trigger_config_data
+
+    def _send_request(self, url, webhook_headers, webhook_json_data):
+        try:
+            if webhook_headers is None:
+                webhook_headers = {'Content-Type': 'application/json'}
+            elif 'Content-Type' not in webhook_headers:
+                webhook_headers['Content-Type'] = 'application/json'
+
+            post_data = webhook_json_data
+            response = requests.post(url,
+                                     json=post_data,
+                                     headers=webhook_headers,
+                                     timeout=10
+                                     )
+
+            response.raise_for_status()  # Raise an exception for HTTP errors
+
+            module_logger.debug(f"<<Webhook>> Successful: URL {url}")
+            return True
+        except HTTPError as e:
+            module_logger.error(
+                f"<<Webhook>> <<Failed>> HTTP error occurred for URL {url}: {e.response.status_code} {e.response.text}")
+            return False
+        except ConnectionError as e:
+            module_logger.error(f"<<Webhook>> <<Failed>> Connection error occurred for URL {url}: {e}")
+            return False
+        except Timeout as e:
+            module_logger.error(f"<<Webhook>> <<Failed>> Timeout error occurred for URL {url}: {e}")
+            return False
+        except RequestException as e:
+            module_logger.error(f"<<Webhook>> <<Failed>> Request error occurred for URL {url}: {e}")
+            return False
+        except Exception as e:
+            traceback.print_exc()
+            module_logger.error(f"<<Webhook>> <<Failed>> Unexpected error occurred for URL {url}: {e}")
+            return False
+
+    def send_webhook(self, webhook_url, wehbook_headers, alert_data, call_data):
+        tone_data = call_data.get("tones", [])
+        test_mode = self.global_config_data.get("general", {}).get("test_mode", True)
+        try:
+
+            trigger_list = ", ".join([alert.get("trigger_name") for alert in alert_data])
+
+            # Convert the epoch timestamp to a datetime object
+            current_time_dt = datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone()
+
+            # Format the datetime object to a human-readable string with the timezone
+            current_time = current_time_dt.strftime('"%H:%M %b %d %Y" %Z')
+
+            if self.system_config_data and not self.trigger_config_data:
+                # System Webhook
+
+                stream_url = self.system_config_data.get("stream_url") or ""
+
+            elif self.system_config_data and self.trigger_config_data:
+                # Trigger Webhook
+
+                stream_url = self.trigger_config_data.get("stream_url") or ""
+                if not stream_url:
+                    stream_url = self.system_config_data.get("stream_url") or ""
+
+            else:
+                # This shouldn't happen
+                module_logger.error("<<Failed>> posting to <<Webhook>> no system or trigger config data.")
+                return False
+
+            webhook_json = {
+                "trigger_list": trigger_list,
+                "timestamp": current_time,
+                "timestamp_epoch": call_data.get("start_time"),
+                "tones": tone_data,
+                "transcript": call_data.get("transcript", {}).get("transcript", "No Transcript"),
+                "audio_wav_url": call_data.get("audio_wav_url") or None,
+                "audio_m4a_url": call_data.get("audio_m4a_url") or None,
+                "stream_url": stream_url,
+                "is_test": test_mode
+            }
+
+            post_result = self._send_request(webhook_url, wehbook_headers, webhook_json)
+            return post_result
+        except Exception as e:
+            traceback.print_exc()
+            module_logger.error(f"<<Webhook>> Post Failure:\n {repr(e)}")
+            return False

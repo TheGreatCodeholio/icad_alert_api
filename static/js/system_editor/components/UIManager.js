@@ -204,10 +204,16 @@ export class UIManager {
                     parent: formGroupDiv
                 });
                 options.forEach(option => {
+                    let fieldValueString = fieldValue.toString();
+                    if (fieldValue === true) {
+                        fieldValueString = '1';
+                    } else if (fieldValue === false) {
+                        fieldValueString = '0';
+                    }
                     this.createElement('option', {
                         value: option.value,
                         textContent: option.text,
-                        selected: fieldValue.toString() === option.value,
+                        selected: fieldValueString === option.value,
                         parent: inputElement
                     });
                 });

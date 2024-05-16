@@ -9,7 +9,8 @@ import {KeywordManager} from "./components/KeywordManager.js";
 
 export class SystemEditor {
 
-    constructor() {
+    constructor(appBasePath) {
+        this.base_path = appBasePath || '';
         this.url_path = window.location.pathname;
         this.base_url = window.location.origin
         this.HttpManager = new HTTPManager();
@@ -54,9 +55,16 @@ export class SystemEditor {
     }
 
     async initEditor() {
-        console.log(this.url_path)
-        if (this.url_path === "/admin/systems") {
-            const request_url = `${this.base_url}/api/get_systems`;
+        let base_url = `${window.location.origin}`;
+        if (this.base_path) {
+            base_url = `${base_url}${this.base_path}`;
+        }
+        console.log(this.url_path);
+
+        const relative_url_path = this.url_path.replace(this.base_path, '');
+
+        if (relative_url_path === "/admin/systems") {
+            const request_url = `${base_url}/api/get_systems`;
             const options = {
                 params: {
                     with_triggers: true
@@ -70,9 +78,9 @@ export class SystemEditor {
                 .catch(error => {
                     this.UIManager.showAlert(`Error fetching systems: ${error}`, "danger")
                 });
-        } else if (this.url_path === "/admin/triggers") {
-            const request_url_system = `${this.base_url}/api/get_systems`;
-            const request_url_filter = `${this.base_url}/api/get_filters`;
+        } else if (relative_url_path === "/admin/triggers") {
+            const request_url_system = `${base_url}/api/get_systems`;
+            const request_url_filter = `${base_url}/api/get_filters`;
 
             // Ensure there is a system_id
             if (!this.system_id) {
@@ -107,8 +115,8 @@ export class SystemEditor {
             } catch (error) {
                 this.UIManager.showAlert(`Error fetching system triggers: ${error}`, "danger");
             }
-        } else if (this.url_path === "/admin/filters"){
-            const request_url = `${this.base_url}/api/get_filters`;
+        } else if (relative_url_path === "/admin/filters"){
+            const request_url = `${base_url}/api/get_filters`;
 
             const options = {
                 params: {

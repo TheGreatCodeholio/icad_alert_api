@@ -4,7 +4,7 @@ import requests
 from json import JSONDecodeError
 
 # Configuration variables for the user to set
-JSON_FILE_PATH = '/home/ian/Documents/scanner_audio/with_tones/two_tone/canton_qrs.json'
+JSON_FILE_PATH = '/home/ian/PycharmProjects/icad_alert_api/test_json/gvems.json'
 URL = "http://localhost:8002/process_alert"
 
 

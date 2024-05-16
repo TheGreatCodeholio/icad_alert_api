@@ -125,7 +125,8 @@
         window.region = "{{ region }}"
     </script>
     <script type="module">
+        const appBasePath = "{{ base_path }}";
         import {SystemEditor} from '{{ url_for('static', filename='js/system_editor/editor.js') }}';
-        const editor = new SystemEditor();
+        const editor = new SystemEditor(appBasePath);
     </script>
 {% endblock %}

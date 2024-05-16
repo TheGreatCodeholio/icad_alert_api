@@ -10,8 +10,10 @@ module_logger = logging.getLogger('icad_alerting_api.config')
 default_config = {
     "log_level": 1,
     "general": {
+        "test_mode": False,
         "region": "US",
         "base_url": "http://localhost",
+        "url_path": None,
         "cookie_domain": "localhost",
         "cookie_secure": False,
         "cookie_name": "icad_alerting",

@@ -88,7 +88,12 @@ LEFT JOIN icad_alerting.radio_system_facebook_settings rsfs on rs.system_id = rs
         return systems_result
 
     for system in systems_result.get("result"):
-        module_logger.debug(system)
+
+        system["email_enabled"] = bool(int(system.get('email_enabled')))
+        system["telegram_enabled"] = bool(int(system.get('telegram_enabled')))
+        system["facebook_enabled"] = bool(int(system.get('facebook_enabled')))
+        system["pushover_enabled"] = bool(int(system.get('pushover_enabled')))
+
         # Processing 'system_emails'
         if system['system_emails']:
             email_items = system['system_emails'].split('|')

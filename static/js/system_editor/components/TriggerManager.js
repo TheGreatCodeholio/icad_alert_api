@@ -278,11 +278,11 @@ export class TriggerManager {
 
         const enabledFacebookCheckbox = document.createElement('input');
         enabledFacebookCheckbox.type = 'checkbox';
-        enabledFacebookCheckbox.name = 'enabled';
+        enabledFacebookCheckbox.name = 'enable_facebook';
         enabledFacebookCheckbox.className = 'form-check-input me-2';
         enabledFacebookCheckbox.role = 'switch';
         enabledFacebookCheckbox.id = `enabled_facebook_${trigger_data.system_id}_${trigger_data.trigger_id}`;
-        enabledFacebookCheckbox.checked = trigger_data.facebook_enabled;
+        enabledFacebookCheckbox.checked = trigger_data.enable_facebook;
         checkFacebookDiv.appendChild(enabledFacebookCheckbox);
 
         const enabledFacebookLabel = document.createElement('label');
@@ -303,11 +303,11 @@ export class TriggerManager {
 
         const enabledTelegramCheckbox = document.createElement('input');
         enabledTelegramCheckbox.type = 'checkbox';
-        enabledTelegramCheckbox.name = 'enabled';
+        enabledTelegramCheckbox.name = 'enable_telegram';
         enabledTelegramCheckbox.className = 'form-check-input me-2';
         enabledTelegramCheckbox.role = 'switch';
         enabledTelegramCheckbox.id = `enabled_telegram_${trigger_data.system_id}_${trigger_data.trigger_id}`;
-        enabledTelegramCheckbox.checked = trigger_data.telegram_enabled;
+        enabledTelegramCheckbox.checked = trigger_data.enable_telegram;
         checkTelegramDiv.appendChild(enabledTelegramCheckbox);
 
         const enabledTelegramLabel = document.createElement('label');
@@ -626,6 +626,15 @@ export class TriggerManager {
                 step: .1,
                 value: trigger_data.hi_low_tone_b,
                 col_class: 'col-md-6'
+            },
+            {
+                id: 'hi_low_alternations',
+                label: 'Hi Low Tone Alternations',
+                tooltip: 'Hi Low Tone Minimum Alternations',
+                type: 'number',
+                step: 1,
+                value: trigger_data.hi_low_alternations,
+                col_class: 'col-md-6'
             }
         ]
 
@@ -853,6 +862,7 @@ export class TriggerManager {
         UIManager.WebhookManager.triggerRenderWebhooks(UIManager, webhookElement, trigger_data);
     }
     triggerPostForm(UIManager, save_url, form_id) {
+        save_url = `${window.location.origin}${save_url}`;
         // Get the form element using its ID
         const form = document.getElementById(form_id);
         if (!form) {
@@ -916,7 +926,8 @@ export class TriggerManager {
 
     triggerDeleteAction(UIManager, system_id, trigger_id, trigger_name) {
         const triggerData = {"system_id": system_id, "trigger_id": trigger_id, "trigger_name": trigger_name};
-        fetch('/admin/delete_trigger', {
+        const save_url = `${window.location.origin}/admin/delete_trigger`;
+        fetch(save_url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

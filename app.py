@@ -230,8 +230,8 @@ def admin_edit_system():
     region = config_data.get("general", {}).get("region", "US")
     if region not in ["US", "CA"]:
         region = "US"
-
-    return render_template("edit_systems.html", region=region)
+    base_path = config_data.get("general", {}).get("base_path", "")
+    return render_template("edit_systems.html", region=region, base_path=base_path)
 
 
 @app.route('/admin/add_system', methods=['GET', 'POST'])
@@ -452,8 +452,8 @@ def admin_edit_trigger():
     region = config_data.get("general", {}).get("region", "US")
     if region not in ["US", "CA"]:
         region = "US"
-
-    return render_template("edit_triggers.html", region=region)
+    base_path = config_data.get("general", {}).get("base_path", "")
+    return render_template("edit_triggers.html", region=region, base_path=base_path)
 
 
 @app.route('/admin/add_trigger', methods=['POST'])
@@ -514,6 +514,7 @@ def admin_save_trigger_general():
     try:
         # Validate incoming JSON data
         form_data = request.form
+        logger.debug(form_data)
         if not form_data:
             logger.error("No Form data provided.")
             return jsonify({"success": False, "message": "No data provided."}), 400
@@ -758,7 +759,9 @@ def admin_edit_filter():
     if region not in ["US", "CA"]:
         region = "US"
 
-    return render_template("edit_alert_filters.html", region=region)
+    base_path = config_data.get("general", {}).get("base_path", "")
+
+    return render_template("edit_alert_filters.html", region=region, base_path=base_path)
 
 
 @app.route('/admin/add_filter', methods=['POST'])
@@ -891,7 +894,7 @@ def process_alert():
         system_data = get_systems(db, system_short_name=call_data.get('short_name'))
         if system_data.get('success') and system_data.get("result", {}):
             ## Start alert check to see if we match any of the alert triggers
-            process_result = process_call_data(db, rd, system_data.get("result")[0], call_data)
+            process_result = process_call_data(db, rd, config_data, system_data.get("result")[0], call_data)
             result["success"] = True
             result["message"] = "Alert Triggers Checked."
             result["result"] = process_result

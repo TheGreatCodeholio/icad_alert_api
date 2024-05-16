@@ -209,6 +209,9 @@ export class FilterManager {
     }
 
     filterPostForm(UIManager, save_url, form_id) {
+
+        save_url = `${window.location.origin}${save_url}`;
+
         // Get the form element using its ID
         const form = document.getElementById(form_id);
         if (!form) {

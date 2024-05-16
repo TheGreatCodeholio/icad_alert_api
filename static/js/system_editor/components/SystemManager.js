@@ -814,6 +814,7 @@ export class SystemManager {
     }
 
     systemPostForm(UIManager, save_url, form_id) {
+        save_url = `${window.location.origin}${save_url}`;
         // Get the form element using its ID
         const form = document.getElementById(form_id);
         if (!form) {
@@ -877,7 +878,8 @@ export class SystemManager {
 
     systemDeleteAction(UIManager, system_id, system_name, system_short_name) {
         const systemData = {"system_id": system_id, "system_name": system_name, "system_short_name": system_short_name};
-        fetch('/admin/delete_system', {
+        const save_url = `${window.location.origin}/admin/delete_system`;
+        fetch(save_url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
