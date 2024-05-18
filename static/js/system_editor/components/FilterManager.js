@@ -210,7 +210,7 @@ export class FilterManager {
 
     filterPostForm(UIManager, save_url, form_id) {
 
-        save_url = `${window.location.origin}${save_url}`;
+        save_url = `${UIManager.baseUrl}${save_url}`;
 
         // Get the form element using its ID
         const form = document.getElementById(form_id);
@@ -275,7 +275,7 @@ export class FilterManager {
 
     filterDeleteAction(UIManager, filter_id, filter_name) {
         const systemData = {"filter_id": filter_id, "filter_name": filter_name};
-        fetch('/admin/delete_filter', {
+        fetch(`${UIManager.baseUrl}/admin/delete_filter`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

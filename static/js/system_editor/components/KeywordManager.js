@@ -234,7 +234,7 @@ export class KeywordManager {
     }
     SaveFilterKeywords(UIManager, keywordElement, filter_data) {
         // Construct the URL for the save operation
-        const save_url = `${window.location.origin}/admin/save_filter_keywords`;
+        const save_url = `${UIManager.baseUrl}/admin/save_filter_keywords`;
 
         // Get the current email data from the system_data which should be updated throughout operations
         const keywordData = {"alert_filter_id": filter_data.alert_filter_id, "alert_filter_name": filter_data.alert_filter_name, "filter_keywords": filter_data.filter_keywords};

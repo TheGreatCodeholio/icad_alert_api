@@ -28,7 +28,7 @@
                 <div class="tab-pane fade" id="trigger-add-tab-pane" role="tabpanel" aria-labelledby="trigger-add-tab" tabindex="0">
                     <div class="row">
                         <div class="col mt-5">
-                            <form id="addTriggerForm" class="d-block" action="/admin/add_trigger" method="post">
+                            <form id="addTriggerForm" class="d-block" action="{{ url_for('admin_add_trigger') }}" method="post">
                                 <div class="mb-3">
                                     <label for="systemId" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top" title="Enter System ID">System ID</label>
                                     <input type="number" class="form-control" id="systemId" name="system_id" required readonly>
@@ -125,8 +125,7 @@
         window.region = "{{ region }}"
     </script>
     <script type="module">
-        const appBasePath = "{{ base_path }}";
         import {SystemEditor} from '{{ url_for('static', filename='js/system_editor/editor.js') }}';
-        const editor = new SystemEditor(appBasePath);
+        const editor = new SystemEditor();
     </script>
 {% endblock %}

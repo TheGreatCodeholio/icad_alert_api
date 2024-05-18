@@ -177,12 +177,10 @@ export class EmailAddressManager {
     }
     systemSaveEmail(UIManager, emailAddressElement, system_data) {
         // Construct the URL for the save operation
-        const save_url = `${window.location.origin}/admin/save_system_emails`;
+        const save_url = `${UIManager.baseUrl}/admin/save_system_emails`;
 
         // Get the current email data from the system_data which should be updated throughout operations
         const emailData = {"system_id": system_data.system_id, "system_emails": system_data.system_emails};
-
-        console.log(emailData)
 
         fetch(save_url, {
             method: 'POST',
@@ -385,7 +383,7 @@ export class EmailAddressManager {
     }
     triggerSaveEmail(UIManager, emailAddressElement, trigger_data) {
         // Construct the URL for the save operation
-        const save_url = `${window.location.origin}/admin/save_trigger_emails`;
+        const save_url = `${UIManager.baseUrl}/admin/save_trigger_emails`;
 
         // Get the current email data from the system_data which should be updated throughout operations
         const emailData = {"system_id": trigger_data.system_id, "trigger_id": trigger_data.trigger_id, "trigger_emails": trigger_data.trigger_emails};

@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS `radio_system_email_settings`
     `smtp_port`           int(11)             DEFAULT NULL,
     `smtp_username`       varchar(255)        DEFAULT NULL,
     `smtp_password`       varchar(255)        DEFAULT NULL,
-    `smtp_security`       tinyint(1)          DEFAULT 2,
     `email_address_from`  varchar(255)        DEFAULT 'dispatch@example.com',
     `email_text_from`     varchar(255)        DEFAULT 'iCAD Dispatch',
     `email_alert_subject` varchar(512)        DEFAULT 'Dispatch Alert',
@@ -140,9 +139,9 @@ CREATE TABLE IF NOT EXISTS `alert_triggers`
     `alert_filter_id`    int(11)                DEFAULT NULL,
     `tone_tolerance`     decimal(6, 1)          DEFAULT 2.0,
     `ignore_time`        decimal(6, 1) NOT NULL DEFAULT 300.0,
-    `trigger_stream_url` varchar(512)           DEFAULT NULL,
-    `enable_facebook`     tinyint(1)    NOT NULL DEFAULT 0,
-    `enable_telegram`     tinyint(1)    NOT NULL DEFAULT 0,
+    `stream_url`         varchar(512)           DEFAULT NULL,
+    `enable_facebook`    tinyint(1)    NOT NULL DEFAULT 0,
+    `enable_telegram`    tinyint(1)    NOT NULL DEFAULT 0,
     `enabled`            tinyint(2)             DEFAULT 1,
     FOREIGN KEY (`system_id`) REFERENCES `radio_systems` (`system_id`) ON DELETE CASCADE
 ) ENGINE = InnoDB
@@ -155,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `alert_trigger_emails`
     `email_id`      int(11) AUTO_INCREMENT PRIMARY KEY,
     `trigger_id`    int(11)      NOT NULL,
     `email_address` varchar(255) NOT NULL,
-    `email_enabled` tinyint(4)   NOT NULL DEFAULT 1,
+    `enabled` tinyint(4)   NOT NULL DEFAULT 1,
     FOREIGN KEY (`trigger_id`) REFERENCES `alert_triggers` (`trigger_id`) ON DELETE CASCADE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
@@ -178,11 +177,11 @@ CREATE TABLE IF NOT EXISTS `alert_trigger_pushover_settings`
 -- create alert trigger webhooks tabl
 CREATE TABLE IF NOT EXISTS `alert_trigger_webhooks`
 (
-    `trigger_webhook_id` int(11) AUTO_INCREMENT PRIMARY KEY,
+    `webhook_id` int(11) AUTO_INCREMENT PRIMARY KEY,
     `trigger_id`         int(11)    NOT NULL,
     `webhook_url`        varchar(512)        DEFAULT NULL,
     `webhook_headers`    TEXT,
-    `webhook_enabled`    tinyint(4) NOT NULL DEFAULT 1,
+    `enabled`    tinyint(4) NOT NULL DEFAULT 1,
     FOREIGN KEY (`trigger_id`) REFERENCES `alert_triggers` (`trigger_id`) ON DELETE CASCADE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4

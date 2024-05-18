@@ -9,8 +9,7 @@ import {KeywordManager} from "./components/KeywordManager.js";
 
 export class SystemEditor {
 
-    constructor(appBasePath) {
-        this.base_path = appBasePath || '';
+    constructor() {
         this.url_path = window.location.pathname;
         this.base_url = window.location.origin
         this.HttpManager = new HTTPManager();
@@ -20,11 +19,20 @@ export class SystemEditor {
         this.WebhookManager = new WebhookManager();
         this.FilterManager = new FilterManager();
         this.KeywordManager = new KeywordManager();
-        this.UIManager = new UIManager(this.SystemManger, this.TriggerManager, this.EmailManager, this.WebhookManager, this.FilterManager, this.KeywordManager);
         this.system_id = null;
         this.trigger_id = null;
         this.filter_id = null;
         this.system_data = null;
+
+        let adminIndex = this.url_path.indexOf('/admin');
+
+        if (adminIndex !== -1) {
+            // Extracts everything up to "/admin" (not including "/admin")
+            let pathBeforeAdmin = this.url_path.substring(0, adminIndex);
+            this.base_url = `${this.base_url}${pathBeforeAdmin}`
+        }
+
+        this.UIManager = new UIManager(this.SystemManger, this.TriggerManager, this.EmailManager, this.WebhookManager, this.FilterManager, this.KeywordManager, this.base_url);
 
         this.getQueryStrings();
         this.processFlashMessages();
@@ -55,16 +63,14 @@ export class SystemEditor {
     }
 
     async initEditor() {
-        let base_url = `${window.location.origin}`;
-        if (this.base_path) {
-            base_url = `${base_url}${this.base_path}`;
-        }
-        console.log(this.url_path);
 
-        const relative_url_path = this.url_path.replace(this.base_path, '');
 
-        if (relative_url_path === "/admin/systems") {
-            const request_url = `${base_url}/api/get_systems`;
+
+        console.log(this.base_url)
+        console.log(this.url_path)
+
+        if (this.url_path.endsWith("/admin/systems")) {
+            const request_url = `${this.base_url}/api/get_systems`;
             const options = {
                 params: {
                     with_triggers: true
@@ -78,9 +84,9 @@ export class SystemEditor {
                 .catch(error => {
                     this.UIManager.showAlert(`Error fetching systems: ${error}`, "danger")
                 });
-        } else if (relative_url_path === "/admin/triggers") {
-            const request_url_system = `${base_url}/api/get_systems`;
-            const request_url_filter = `${base_url}/api/get_filters`;
+        } else if (this.url_path.endsWith("/admin/triggers")) {
+            const request_url_system = `${this.base_url}/api/get_systems`;
+            const request_url_filter = `${this.base_url}/api/get_filters`;
 
             // Ensure there is a system_id
             if (!this.system_id) {
@@ -115,8 +121,8 @@ export class SystemEditor {
             } catch (error) {
                 this.UIManager.showAlert(`Error fetching system triggers: ${error}`, "danger");
             }
-        } else if (relative_url_path === "/admin/filters"){
-            const request_url = `${base_url}/api/get_filters`;
+        } else if (this.url_path.endsWith("/admin/filters")){
+            const request_url = `${this.base_url}/api/get_filters`;
 
             const options = {
                 params: {

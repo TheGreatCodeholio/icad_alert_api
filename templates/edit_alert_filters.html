@@ -29,7 +29,7 @@
                  tabindex="0">
                 <div class="row">
                     <div class="col mt-5">
-                        <form id="addFilterForm" class="d-block" action="/admin/add_filter" method="post">
+                        <form id="addFilterForm" class="d-block" action="{{ url_for('admin_add_filter') }}" method="post">
                             <div class="form-group mb-3">
                                 <label for="filterName">Filter Name</label>
                                 <input id="filterName" class="form-control" type="text"
@@ -60,8 +60,7 @@
         });
     </script>
     <script type="module">
-        const appBasePath = "{{ base_path }}";
         import {SystemEditor} from '{{ url_for('static', filename='js/system_editor/editor.js') }}'; // Adjust the import path as necessary
-        const editor = new SystemEditor(appBasePath);
+        const editor = new SystemEditor();
     </script>
 {% endblock %}

@@ -1,6 +1,7 @@
 export class UIManager {
-    constructor(SystemManager, TriggerManager, EmailAddressManager, WebhookManager, FilterManager, KeywordManager) {
+    constructor(SystemManager, TriggerManager, EmailAddressManager, WebhookManager, FilterManager, KeywordManager, baseURL) {
         this.region = window.region;
+        this.baseUrl = baseURL;
         this.EmailAddressManager = EmailAddressManager;
         this.WebhookManager = WebhookManager;
         this.SystemManager = SystemManager;

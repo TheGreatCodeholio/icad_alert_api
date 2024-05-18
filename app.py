@@ -8,6 +8,8 @@ import redis
 from flask import Flask, request, session, redirect, url_for, render_template, flash, jsonify
 from flask_session import Session
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 from lib.alert_filter_handler import get_alert_filters, delete_filter, update_alert_filter_general, \
     update_filter_keyword, add_filter
 from lib.alert_processing_handler import get_active_alerts_cache, delete_active_alerts_cache, process_call_data
@@ -74,7 +76,10 @@ except Exception as e:
     logger.error(f'Error while <<connecting>> to the <<Redis Cache:>> {e}')
     exit(1)
 
-app = Flask(__name__, template_folder='templates', static_folder='static')
+app = Flask(__name__)
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+)
 
 if not os.getenv('SECRET_KEY'):
     try:
@@ -230,8 +235,7 @@ def admin_edit_system():
     region = config_data.get("general", {}).get("region", "US")
     if region not in ["US", "CA"]:
         region = "US"
-    base_path = config_data.get("general", {}).get("base_path", "")
-    return render_template("edit_systems.html", region=region, base_path=base_path)
+    return render_template("edit_systems.html", region=region)
 
 
 @app.route('/admin/add_system', methods=['GET', 'POST'])
@@ -452,8 +456,7 @@ def admin_edit_trigger():
     region = config_data.get("general", {}).get("region", "US")
     if region not in ["US", "CA"]:
         region = "US"
-    base_path = config_data.get("general", {}).get("base_path", "")
-    return render_template("edit_triggers.html", region=region, base_path=base_path)
+    return render_template("edit_triggers.html", region=region)
 
 
 @app.route('/admin/add_trigger', methods=['POST'])
@@ -625,6 +628,7 @@ def admin_save_trigger_hi_low_tone():
         logger.error(f"Unexpected error: {e}")
         return jsonify({"success": False, "message": "Unexpected Error Occurred"}), 400
 
+
 @app.route('/admin/save_trigger_alert_filter', methods=['POST'])
 @login_required
 def admin_save_trigger_alert_filter():
@@ -652,6 +656,7 @@ def admin_save_trigger_alert_filter():
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         return jsonify({"success": False, "message": "Unexpected Error Occurred"}), 400
+
 
 @app.route('/admin/save_trigger_emails', methods=['POST'])
 @login_required
@@ -759,9 +764,7 @@ def admin_edit_filter():
     if region not in ["US", "CA"]:
         region = "US"
 
-    base_path = config_data.get("general", {}).get("base_path", "")
-
-    return render_template("edit_alert_filters.html", region=region, base_path=base_path)
+    return render_template("edit_alert_filters.html", region=region)
 
 
 @app.route('/admin/add_filter', methods=['POST'])
@@ -944,5 +947,5 @@ if systems.get("result", []):
         system_short_name = system.get("system_short_name")
         clear_loop_manager(system_short_name, action="start")
 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8002, debug=False)
+# if __name__ == '__main__':
+#     app.run(host="0.0.0.0", port=8002, debug=False)

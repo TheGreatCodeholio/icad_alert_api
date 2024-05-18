@@ -359,7 +359,7 @@ export class TriggerManager {
         });
 
         saveTriggerButton.onclick = () => {
-            this.triggerPostForm(UIManager, '/admin/save_trigger_general', `trigger_general_form_${trigger_data.system_id}_${trigger_data.trigger_id}`)
+            this.triggerPostForm(UIManager, `${UIManager.baseUrl}/admin/save_trigger_general`, `trigger_general_form_${trigger_data.system_id}_${trigger_data.trigger_id}`)
         }
 
         const deleteTriggerButton = UIManager.createElement('button', {
@@ -862,7 +862,7 @@ export class TriggerManager {
         UIManager.WebhookManager.triggerRenderWebhooks(UIManager, webhookElement, trigger_data);
     }
     triggerPostForm(UIManager, save_url, form_id) {
-        save_url = `${window.location.origin}${save_url}`;
+        save_url = `${UIManager.baseUrl}${save_url}`;
         // Get the form element using its ID
         const form = document.getElementById(form_id);
         if (!form) {
@@ -926,7 +926,7 @@ export class TriggerManager {
 
     triggerDeleteAction(UIManager, system_id, trigger_id, trigger_name) {
         const triggerData = {"system_id": system_id, "trigger_id": trigger_id, "trigger_name": trigger_name};
-        const save_url = `${window.location.origin}/admin/delete_trigger`;
+        const save_url = `${UIManager.baseUrl}/admin/delete_trigger`;
         fetch(save_url, {
             method: 'POST',
             headers: {
