@@ -40,4 +40,4 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 USER icad
 
 # Run app.py when the container launches
-CMD ["gunicorn", "-b", "0.0.0.0:9912", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:9911", "app:app"]
