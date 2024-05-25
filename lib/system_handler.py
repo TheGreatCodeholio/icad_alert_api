@@ -355,7 +355,9 @@ def update_system_facebook_settings(db, system_data, config_data):
             "UPDATE radio_system_facebook_settings SET facebook_enabled = %s, facebook_page_id = %s, facebook_page_token = %s, facebook_comment_enabled = %s, facebook_post_body = %s, facebook_comment_body = %s WHERE system_id = %s",
             (system_data.get("facebook_enabled") or 0, system_data.get("facebook_page_id") or None,
              facebook_page_token or None, system_data.get("facebook_comment_enabled") or 0,
-             system_data.get("facebook_post_body") or '{timestamp} Departments:\n{trigger_list}\n\nDispatch Audio:\n{mp3_url}', system_data.get("facebook_comment_body") or '{transcript}\n{stream_url}',
+             system_data.get(
+                 "facebook_post_body") or '{timestamp} Departments:\n{trigger_list}\n\nDispatch Audio:\n{mp3_url}',
+             system_data.get("facebook_comment_body") or '{transcript}\n{stream_url}',
              system_data.get("system_id"))
         )
     except Exception as e:
@@ -413,4 +415,11 @@ def delete_radio_system(db, system_id):
     query = f"DELETE FROM radio_systems WHERE system_id = %s"
     params = (int(system_id),)
     result = db.execute_commit(query, params)
+    return result
+
+
+def get_system_api_key(db, system_api_key):
+    query = f"SELECT system_id FROM radio_systems WHERE system_api_key = %s"
+    params = (system_api_key,)
+    result = db.execute_query(query, params, fetch_mode="one")
     return result

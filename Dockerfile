@@ -1,8 +1,8 @@
 # Use an official Python Alpine Image
 FROM python:3.12-alpine
 
-ARG USER_ID=1000
-ARG GROUP_ID=1000
+ARG USER_ID=9911
+ARG GROUP_ID=9911
 
 RUN addgroup -g ${GROUP_ID} icad && \
     adduser -u ${USER_ID} -G icad -D icad
@@ -40,4 +40,4 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 USER icad
 
 # Run app.py when the container launches
-CMD ["gunicorn", "-b", "0.0.0.0:9911", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:9912", "app:app"]

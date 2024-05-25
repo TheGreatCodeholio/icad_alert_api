@@ -23,7 +23,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       TZ: ${TIMEZONE}
     ports:
-      - "9911:9911"
+      - "9912:9912"
     volumes:
       - ${WORKING_PATH}/log:/app/log
       - ${WORKING_PATH}/etc:/app/etc

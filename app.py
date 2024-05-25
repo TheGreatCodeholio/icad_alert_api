@@ -23,7 +23,7 @@ from lib.mysql_handler import MySQLDatabase
 from lib.redis_handler import RedisCache
 from lib.system_handler import get_systems, update_system_general, update_system_email_settings, \
     update_system_pushover_settings, update_system_telegram_settings, update_system_alert_emails, add_system, \
-    delete_radio_system, update_system_facebook_settings
+    delete_radio_system, update_system_facebook_settings, get_system_api_key
 from lib.user_handler import authenticate_user
 from lib.webhook_handler import update_system_webhooks, update_trigger_webhooks
 
@@ -196,6 +196,28 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def require_api_key(db):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Retrieve API key from request headers
+            api_key = request.headers.get('Authorization')
+            if not api_key:
+                return jsonify({"success": False, "message": "API key is missing."}), 403
+
+            # Get system ID using the API key
+            system_id = get_system_api_key(db, api_key)
+            logger.warning(system_id)
+            if not system_id.get("success") or not system_id.get("result", {}):
+                return jsonify({"success": False, "message": "Invalid API key."}), 403
+
+            logger.debug("API Key Valid")
+            # If system_id is found, proceed with the original function
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 @app.route('/login', methods=['POST'])
@@ -886,13 +908,17 @@ def admin_save_filter_keywords():
 
 # Endpoint to receive the JSON file with the audio URL
 @app.route('/process_alert', methods=['POST'])
+@require_api_key(db)
 def process_alert():
-    call_data = request.get_json()
+    # Create Result Dict
     result = {
         "success": False,
         "message": "Unknown Error",
         "result": []
     }
+
+    call_data = request.get_json()
+
     if call_data:
         system_data = get_systems(db, system_short_name=call_data.get('short_name'))
         if system_data.get('success') and system_data.get("result", {}):
@@ -947,5 +973,5 @@ if systems.get("result", []):
         system_short_name = system.get("system_short_name")
         clear_loop_manager(system_short_name, action="start")
 
-# if __name__ == '__main__':
-#     app.run(host="0.0.0.0", port=8002, debug=False)
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=8002, debug=False)
