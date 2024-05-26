@@ -24,7 +24,7 @@ from lib.redis_handler import RedisCache
 from lib.system_handler import get_systems, update_system_general, update_system_email_settings, \
     update_system_pushover_settings, update_system_telegram_settings, update_system_alert_emails, add_system, \
     delete_radio_system, update_system_facebook_settings, get_system_api_key
-from lib.user_handler import authenticate_user
+from lib.user_handler import authenticate_user, user_change_password
 from lib.webhook_handler import update_system_webhooks, update_trigger_webhooks
 
 app_name = "icad_alerting_api"
@@ -216,7 +216,9 @@ def require_api_key(db):
             logger.debug("API Key Valid")
             # If system_id is found, proceed with the original function
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -904,6 +906,40 @@ def admin_save_filter_keywords():
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         return jsonify({"success": False, "message": "An unexpected error occurred."}), 500
+
+
+@app.route('/admin/change_password', methods=['POST'])
+@login_required
+def admin_change_password():
+    try:
+        # Extract JSON data from request
+        request_form = request.form
+        if not request_form:
+            message = "No data provided."
+            logger.error(message)
+            flash(message, 'danger')
+            return redirect(url_for('admin_index'))
+
+        current_password = request_form.get("currentPassword")
+        new_password = request_form.get("newPassword")
+
+        if not new_password or not new_password:
+            message = "No password provided or empty string."
+            logger.error(message)
+            flash(message, 'danger')
+            return redirect(url_for('admin_index'))
+
+        result = user_change_password(db, "admin", current_password, new_password)
+
+        logger.error(result.get("message"))
+        flash(result.get("message"), 'success' if result.get("success") else 'danger')
+        return redirect(url_for('admin_index'))
+
+    except Exception as e:
+        message = f"Unexpected error: {e}"
+        logger.error(message)
+        flash(message, 'danger')
+        return redirect(url_for('admin_index'))
 
 
 # Endpoint to receive the JSON file with the audio URL

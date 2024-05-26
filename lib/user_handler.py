@@ -7,18 +7,49 @@ from flask import session
 module_logger = logging.getLogger('icad_alerting_api.user_handler')
 
 
+def get_users(db, user_id=None, username=None, limit_one=False):
+    base_query = """
+SELECT
+    ur.*,
+    us.*
+    FROM users ur
+    LEFT JOIN user_security us on ur.user_id = us.user_id
+    """
+
+    where_clauses = []
+    parameters = []
+    if user_id is not None:
+        where_clauses.append("ur.user_id = %s")
+        parameters.append(user_id)
+    if username is not None:
+        where_clauses.append("ur.user_username = %s")
+        parameters.append(username)
+
+    if where_clauses:
+        where_clause = "WHERE " + " AND ".join(where_clauses)
+        final_query = f"{base_query} {where_clause} GROUP BY ur.user_id"
+    else:
+        final_query = f"{base_query} GROUP BY ur.user_id"
+
+    users_result = db.execute_query(final_query, tuple(parameters) if parameters else None, fetch_mode="one" if limit_one else "many")
+    module_logger.debug(f"users_result: {users_result}")
+    return users_result
+
+
+def password_validate(database_password, given_password):
+    return bcrypt.checkpw(given_password.encode('utf-8'), database_password.encode('utf-8'))
+
+
 def authenticate_user(db, username, password):
-    user_query = f"SELECT users.*, us.* FROM users INNER JOIN user_security us ON users.user_id = us.user_id WHERE user_username = %s"
-    user_params = (username,)
-    user_result = db.execute_query(user_query, user_params, fetch_mode='one')
+    user_result = get_users(db, username=username, limit_one=True)
     if not user_result['success']:
         return {"success": False, "message": user_result['message']}
 
     if not user_result['result']:
-        return {"success": False, "message": "Invalid Username or Password."}
+        return {"success": False, "message": "User not found."}
 
     user_data = user_result['result']
-    if not bcrypt.checkpw(password.encode('utf-8'), user_data.get("user_password").encode('utf-8')):
+    if not password_validate(user_data.get("user_password"), password):
         set_invalid_result = set_login_values(db, user_data, True)
         if not set_invalid_result:
             module_logger.error("Can not set database values for failed login attempt.")
@@ -104,13 +135,30 @@ def set_session_keys(user_data):
         return False
 
 
-def user_change_password(db, username, password):
+def update_user_password(db, username, password):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     user_up_pass_query = f'UPDATE users SET user_password = %s WHERE user_username = %s'
     user_up_pass_params = (hashed_password, username)
     user_up_pass_result = db.execute_commit(user_up_pass_query, user_up_pass_params)
+    return user_up_pass_result
+
+
+def user_change_password(db, username, current_password, new_password):
+    user_result = get_users(db, username=username, limit_one=True)
+    if not user_result['success']:
+        return {"success": False, "message": user_result['message']}
+
+    if not user_result['result']:
+        return {"success": False, "message": "Username or Password incorrect"}
+
+    user_data = user_result['result']
+    if not password_validate(user_data.get("user_password"), current_password):
+        module_logger.warning(f"Password Incorrect: {username}")
+        return {"success": False, "message": "Invalid Username or Password"}
+
+    user_up_pass_result = update_user_password(db, username, new_password)
 
     if user_up_pass_result["success"]:
         return {"success": True, "message": "Password Changed Successfully"}
     else:
-        return {"success": False, "message": "Password Change Failed. "}
+        return {"success": False, "message": f"Password Change Failed. {user_up_pass_result.get('message')}"}

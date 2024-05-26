@@ -29,12 +29,12 @@
             </div>
             <div class="modal-body">
                 <form role="form" action="{{ url_for('login') }}" method="post">
-                    <div class="mb-3">
+                    <div class="form-group mb-3">
                         <label for="username"><i class="fa fa-user"></i> Username</label>
                         <input type="text" name="username" class="form-control" id="username"
                                placeholder="Enter username">
                     </div>
-                    <div class="mb-3">
+                    <div class="form-group mb-3">
                         <label for="password"><i class="fa fa-eye"></i> Password</label>
                         <input type="password" name="password" class="form-control" id="password"
                                placeholder="Password">
@@ -118,6 +118,7 @@
 </footer>
 <!-- Bootstrap 5 JS -->
 <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/alert_manager.js') }}"></script>
 {% for category, message in get_flashed_messages(with_categories=true) %}
     <div class="flash-message d-none" data-category="{{ category }}" data-message="{{ message }}"></div>
 {% endfor %}
