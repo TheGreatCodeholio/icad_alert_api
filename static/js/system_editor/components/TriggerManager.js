@@ -359,7 +359,7 @@ export class TriggerManager {
         });
 
         saveTriggerButton.onclick = () => {
-            this.triggerPostForm(UIManager, `${UIManager.baseUrl}/admin/save_trigger_general`, `trigger_general_form_${trigger_data.system_id}_${trigger_data.trigger_id}`)
+            this.triggerPostForm(UIManager, `/admin/save_trigger_general`, `trigger_general_form_${trigger_data.system_id}_${trigger_data.trigger_id}`)
         }
 
         const deleteTriggerButton = UIManager.createElement('button', {

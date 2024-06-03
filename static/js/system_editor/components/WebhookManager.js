@@ -331,7 +331,7 @@ export class WebhookManager {
 
     systemSaveWebhooks(UIManager, system_data) {
         // Construct the URL for the save operation
-        const save_url = `${UIManager.baseUrl}/admin/save_system_webhooks`;
+        const save_url = `/admin/save_system_webhooks`;
 
         // Get the current webhook data from the system_data which should be updated throughout operations
         const webhookData = {"system_id": system_data.system_id, "system_webhooks": system_data.system_webhooks};

@@ -184,14 +184,14 @@ def insert_default_system_settings(db, system_id):
         db.execute_commit(
             "INSERT INTO radio_system_email_settings (system_id, email_alert_body) VALUES (%s, %s)",
             (system_id,
-             "{trigger_list} Alert at {timestamp}<br><br>{transcript}<br><br><a href=\"{audio_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>")
+             "{trigger_list} Alert at {timestamp}<br><br>{transcript}<br><br><a href=\"{audio_wav_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>")
         )
 
         # Insert default pushover settings
         db.execute_commit(
             "INSERT INTO radio_system_pushover_settings (system_id, pushover_body) VALUES (%s, %s)",
             (system_id,
-             "<font color=\"red\"><b>{trigger_list}</b></font><br><br><a href=\"{audio_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>")
+             "<font color=\"red\"><b>{trigger_list}</b></font><br><br><a href=\"{audio_wav_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>")
         )
 
         # Insert default Facebook settings
@@ -252,7 +252,7 @@ def update_system_email_settings(db, system_data, config_data):
                 system_data.get("email_text_from") or "iCAD Dispatch",
                 system_data.get("email_alert_subject") or "Dispatch Alert",
                 system_data.get("email_alert_body") or
-                "{agency_list} Alert at {timestamp}<br><br>{transcript}<br><br><a href=\"{audio_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>",
+                "{agency_list} Alert at {timestamp}<br><br>{transcript}<br><br><a href=\"{audio_wav_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>",
                 system_data.get("system_id"))
         )
     except Exception as e:
@@ -329,14 +329,14 @@ def update_system_pushover_settings(db, system_data, config_data):
             (system_data.get("pushover_enabled", 0), pushover_group_token or None,
              pushover_app_token or None,
              system_data.get("pushover_body") or
-             "<font color=\"red\"><b>{trigger_name}</b></font><br><br><a href=\"{audio_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>",
+             "<font color=\"red\"><b>{trigger_name}</b></font><br><br><a href=\"{audio_wav_url}\">Click for Dispatch Audio</a><br><br><a href=\"{stream_url}\">Click Audio Stream</a>",
              system_data.get("pushover_subject") or "Dispatch Alert", system_data.get("pushover_sound") or "pushover",
              system_data.get("system_id")
              )
         )
 
     except Exception as e:
-        module_logger.error(f"Unexpected Exception when saving system pushonver settings: {e}")
+        module_logger.error(f"Unexpected Exception when saving system pushover settings: {e}")
         result = {"success": False, "message": f"Unexpected Exception when saving system pushover settings: {e}",
                   "result": []}
 

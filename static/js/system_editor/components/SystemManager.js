@@ -199,7 +199,8 @@ export class SystemManager {
             name: 'system_id',
             parent: form
         })
-         UIManager.createElement('input', {
+
+        UIManager.createElement('input', {
             type: "hidden",
             value: system_data.system_short_name,
             name: 'system_short_name_orig',

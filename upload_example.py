@@ -7,8 +7,8 @@ from json import JSONDecodeError
 JSON_FILE_PATH = '/home/ian/PycharmProjects/icad_alert_api/test_json/gvems.json'
 
 ALERT_CONFIG = {
-    "api_url": "http://localhost:8002/process_alert",
-    "api_key": "1234-1234-1234-1234"
+    "api_url": "https://icad.icarey.net/process_alert",
+    "api_key": "8ac99b91-fc35-4163-a739-01e2fea86446"
 }
 
 
