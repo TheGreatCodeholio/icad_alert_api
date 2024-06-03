@@ -254,11 +254,11 @@ export class TriggerManager {
                 col_class: 'col-md-6'
             },
             {
-                id: 'trigger_stream_url',
+                id: 'stream_url',
                 label: 'Trigger Stream URL',
                 tooltip: 'URL for the trigger stream',
                 type: 'url',
-                value: trigger_data.trigger_stream_url,
+                value: trigger_data.stream_url,
                 placeholder: 'https://scanner.ccfirewire.com',
                 col_class: 'col-md-6'
             }
@@ -425,7 +425,7 @@ export class TriggerManager {
                 id: 'two_tone_a',
                 label: 'Two Tone A',
                 tooltip: 'Two Tone A in HZ',
-                type: 'number',
+                type: 'text',
                 step: .1,
                 value: trigger_data.two_tone_a,
                 col_class: 'col-md-6'
@@ -443,7 +443,7 @@ export class TriggerManager {
                 id: 'two_tone_b',
                 label: 'Two Tone B',
                 tooltip: 'Two Tone B in HZ',
-                type: 'number',
+                type: 'text',
                 step: .1,
                 value: trigger_data.two_tone_b,
                 col_class: 'col-md-6'

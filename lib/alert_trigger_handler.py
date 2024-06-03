@@ -167,7 +167,7 @@ def add_alert_trigger(db, trigger_data):
     query = (f'INSERT INTO alert_triggers (system_id, trigger_name, '
              f'two_tone_a, two_tone_a_length, two_tone_b, two_tone_b_length, '
              f'long_tone, long_tone_length, hi_low_tone_a, hi_low_tone_b, hi_low_alternations,'
-             f'alert_filter_id, tone_tolerance, ignore_time, trigger_stream_url, enable_facebook, enable_telegram, enabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
+             f'alert_filter_id, tone_tolerance, ignore_time, stream_url, enable_facebook, enable_telegram, enabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' )
     params = (trigger_data.get('system_id'),
               trigger_data.get('trigger_name'),
               trigger_data.get('two_tone_a') or None, trigger_data.get('two_tone_a_length') or None,
@@ -176,7 +176,7 @@ def add_alert_trigger(db, trigger_data):
               trigger_data.get('hi_low_tone_a') or None, trigger_data.get('hi_low_tone_b') or None,
               trigger_data.get('hi_low_alternations', 4),
               trigger_data.get('alert_filter_id') or None, trigger_data.get('tone_tolerance', 2.0),
-              trigger_data.get('ignore_time', 300.0), trigger_data.get('trigger_stream_url') or None,
+              trigger_data.get('ignore_time', 300.0), trigger_data.get('stream_url') or None,
               0, 0, enabled)
 
     result = db.execute_commit(query, params)
@@ -189,7 +189,7 @@ def add_alert_trigger(db, trigger_data):
 
 def insert_alert_trigger_default(db, trigger_data):
     db.execute_commit(
-        "INSERT INTO alert_trigger_pushover_settings (trigger_id,) VALUES (%s)",
+        "INSERT INTO alert_trigger_pushover_settings (trigger_id) VALUES (%s)",
         (trigger_data.get('trigger_id'),)
     )
 
@@ -232,9 +232,9 @@ def update_alert_trigger_general(db, trigger_data):
     facebook_enabled = 1 if trigger_data.get("enable_facebook") else 0
     telegram_enabled = 1 if trigger_data.get("enable_telegram") else 0
 
-    query = f"UPDATE alert_triggers SET trigger_name = %s, tone_tolerance = %s, ignore_time = %s, trigger_stream_url = %s, enable_facebook = %s, enable_telegram = %s, enabled = %s WHERE system_id = %s AND trigger_id = %s"
+    query = f"UPDATE alert_triggers SET trigger_name = %s, tone_tolerance = %s, ignore_time = %s, stream_url = %s, enable_facebook = %s, enable_telegram = %s, enabled = %s WHERE system_id = %s AND trigger_id = %s"
     params = (trigger_data.get('trigger_name'), trigger_data.get('tone_tolerance', 2.0),
-              trigger_data.get('ignore_time', 300.0), trigger_data.get('trigger_stream_url') or None,
+              trigger_data.get('ignore_time', 300.0), trigger_data.get('stream_url') or None,
               facebook_enabled, telegram_enabled,
               enabled , trigger_data.get('system_id'), trigger_data.get('trigger_id'))
 

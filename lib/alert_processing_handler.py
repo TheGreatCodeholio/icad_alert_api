@@ -157,9 +157,15 @@ def check_two_tone_triggers(alert_trigger, call_data):
     tone_b_length = alert_trigger.get("two_tone_b_length", 2.3)
 
     for tone in match_list:
-        match_a, match_b = is_within_range(tone[0], detector_ranges[0]), is_within_range(tone[1], detector_ranges[1])
+        if a_tone == -1 and b_tone == -1:
+            match_a, match_b = True, True
+            length_match = True
+        else:
+            match_a = is_within_range(tone[0], detector_ranges[0]) if a_tone != -1 else True
+            match_b = is_within_range(tone[1], detector_ranges[1]) if b_tone != -1 else True
+            length_match = tone[3] >= tone_a_length and tone[4] >= tone_b_length
 
-        if match_a and match_b and tone[3] >= tone_a_length and tone[4] >= tone_b_length:
+        if match_a and match_b and length_match:
             match_data = {
                 "tone_id": tone[2],
                 "tones_matched": f'{tone[0]}, {tone[1]}'
@@ -188,9 +194,14 @@ def check_long_tone_triggers(alert_trigger, call_data):
     tone_range = (long_tone - tolerance, long_tone + tolerance)
 
     for tone in match_list:
-        match_tone = is_within_range(tone[0], tone_range)
+        if long_tone == -1:
+            match_tone = True
+            length_match = True
+        else:
+            match_tone = is_within_range(tone[0], tone_range)
+            length_match = tone[2] >= required_length
 
-        if match_tone and tone[2] >= required_length:
+        if match_tone and length_match:
             match_data = {
                 "tone_id": tone[1],
                 "tones_matched": f'{tone[0]}'
@@ -222,10 +233,15 @@ def check_hi_low_tone_triggers(alert_trigger, call_data):
                   (low_tone - tolerance_low, low_tone + tolerance_low)]
 
     for tone in match_list:
-        match_hi, match_low = is_within_range(tone[0], tone_range[0]), is_within_range(tone[1],
-                                                                                       tone_range[1])
+        if hi_tone == -1 and low_tone == -1:
+            match_hi, match_low = True, True
+            alternations_match = True
+        else:
+            match_hi = is_within_range(tone[0], tone_range[0]) if hi_tone != -1 else True
+            match_low = is_within_range(tone[1], tone_range[1]) if low_tone != -1 else True
+            alternations_match = tone[3] >= min_alternations
 
-        if match_hi and match_low and tone[3] >= min_alternations:
+        if match_hi and match_low and alternations_match:
             match_data = {
                 "tone_id": tone[2],
                 "tones_matched": f'{tone[0]}, {tone[1]}'

@@ -931,7 +931,7 @@ def admin_change_password():
 
         result = user_change_password(db, "admin", current_password, new_password)
 
-        logger.error(result.get("message"))
+        logger.debug(result.get("message"))
         flash(result.get("message"), 'success' if result.get("success") else 'danger')
         return redirect(url_for('admin_index'))
 
