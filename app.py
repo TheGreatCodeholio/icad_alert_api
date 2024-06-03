@@ -1009,5 +1009,5 @@ if systems.get("result", []):
         system_short_name = system.get("system_short_name")
         clear_loop_manager(system_short_name, action="start")
 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8002, debug=False)
+# if __name__ == '__main__':
+#     app.run(host="0.0.0.0", port=8002, debug=False)

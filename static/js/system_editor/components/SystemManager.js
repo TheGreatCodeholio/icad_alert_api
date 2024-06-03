@@ -199,6 +199,12 @@ export class SystemManager {
             name: 'system_id',
             parent: form
         })
+         UIManager.createElement('input', {
+            type: "hidden",
+            value: system_data.system_short_name,
+            name: 'system_short_name_orig',
+            parent: form
+        })
 
         let inputFields = [
             {
@@ -210,14 +216,6 @@ export class SystemManager {
                 tooltip: 'System Identifier',
                 col_class: 'col-4',
 
-            },
-            {
-                label: 'Short Name:',
-                id: 'system_short_name_orig',
-                type: 'hidden',
-                value: system_data.system_short_name,
-                tooltip: 'Shortened System Name (No Spaces)',
-                col_class: 'd-none'
             },
             {
                 label: 'Short Name:',
