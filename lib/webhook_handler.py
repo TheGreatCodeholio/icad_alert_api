@@ -37,12 +37,12 @@ def update_system_webhooks(db, system_id, webhooks_data):
                         current_webhooks[webhook_id]['enabled'] != enabled):
                     db.execute_commit(
                         "UPDATE radio_system_webhooks SET webhook_url = %s, webhook_headers = %s, webhook_body = %s, enabled = %s WHERE webhook_id = %s AND system_id = %s",
-                        (webhook_url, webhook_headers, enabled, webhook_id, system_id))
+                        (webhook_url, webhook_headers, webhook_body, enabled, webhook_id, system_id))
             else:
                 # Insert new webhook if it doesn't exist
                 db.execute_commit(
                     "INSERT INTO radio_system_webhooks (system_id, webhook_url, webhook_headers, webhook_body, enabled) VALUES (%s, %s, %s, %s, %s)",
-                    (system_id, webhook_url, webhook_headers, enabled))
+                    (system_id, webhook_url, webhook_headers, webhook_body, enabled))
 
         # Check for webhooks to remove
         existing_ids = set(current_webhooks.keys())

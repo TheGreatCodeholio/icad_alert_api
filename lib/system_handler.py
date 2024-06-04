@@ -49,8 +49,8 @@ SELECT
             '{"webhook_id": "', rsws.webhook_id, 
             '", "enabled": "', rsws.enabled,
             '", "webhook_url": "', rsws.webhook_url,
-            '", "webhook_headers": "', rsws.webhook_headers, '"}',
-            '", "webhook_body": "', rsws.webhook_body, '"}',
+            '", "webhook_headers": "', rsws.webhook_headers,
+            '", "webhook_body": "', rsws.webhook_body, '"}'
         ) SEPARATOR '|') AS system_webhooks,
     GROUP_CONCAT(
         DISTINCT CONCAT(
