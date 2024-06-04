@@ -32,7 +32,7 @@ def get_alert_triggers(db, system_ids=None, trigger_id=None):
             '{"webhook_id": "', tw.webhook_id, 
             '", "enabled": "', tw.enabled,
             '", "webhook_url": "', tw.webhook_url,
-            '", "webhook_headers": "', tw.webhook_headers, '"}',
+            '", "webhook_headers": "', tw.webhook_headers, 
             '", "webhook_body": "', tw.webhook_body, '"}'
         ) SEPARATOR '|') AS trigger_webhooks,
         GROUP_CONCAT(
