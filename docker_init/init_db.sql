@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS `radio_system_webhooks`
     `system_id`         int(11),
     `webhook_url`       varchar(255)        DEFAULT NULL,
     `webhook_headers`   TEXT,
+    `webhook_body`   TEXT,
     `enabled`   tinyint(1) NOT NULL DEFAULT 0,
     FOREIGN KEY (`system_id`) REFERENCES `radio_systems` (`system_id`) ON DELETE CASCADE
 ) ENGINE = InnoDB
@@ -181,6 +182,7 @@ CREATE TABLE IF NOT EXISTS `alert_trigger_webhooks`
     `trigger_id`         int(11)    NOT NULL,
     `webhook_url`        varchar(512)        DEFAULT NULL,
     `webhook_headers`    TEXT,
+    `webhook_body`       TEXT,
     `enabled`    tinyint(4) NOT NULL DEFAULT 1,
     FOREIGN KEY (`trigger_id`) REFERENCES `alert_triggers` (`trigger_id`) ON DELETE CASCADE
 ) ENGINE = InnoDB

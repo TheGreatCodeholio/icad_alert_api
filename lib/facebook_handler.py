@@ -5,6 +5,7 @@ import logging
 import requests
 
 from lib.config_handler import decrypt_password
+from lib.helper_handler import generate_mapped_content
 
 module_logger = logging.getLogger('icad_alerting_api.facebook')
 
@@ -93,52 +94,15 @@ class FacebookAPI:
 
     def generate_facebook_message(self, alert_data, call_data):
 
-        post_body = self.system_config_data.get("facebook_post_body",
-                                                "{timestamp} Departments:\n{trigger_list}\n\nDispatch Audio:\n{audio_wav_url}")
+        post_body_template = self.system_config_data.get("facebook_post_body",
+                                                         "{timestamp} Departments:\n{trigger_list}\n\nDispatch Audio:\n{audio_wav_url}")
 
-        # Convert the epoch timestamp to a datetime object
-        current_time_dt = datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone()
-
-        # Format the datetime object to a human-readable string with the timezone
-        current_time = current_time_dt.strftime('%H:%M %b %d %Y %Z')
-
-        trigger_list = "\n".join(
-            [alert.get("trigger_name") for alert in alert_data if alert.get("facebook_enabled", False)])
-
-        if self.test_mode:
-            post_body = f"TEST TEST TEST TEST TEST\n\n{post_body}"
-
-        # Create a mapping
-        mapping = {
-            "trigger_list": trigger_list,
-            "timestamp": current_time,
-            "timestamp_epoch": call_data.get("start_time"),
-            "transcript": call_data.get("transcript", {}).get("transcript", ""),
-            "audio_wav_url": call_data.get("audio_wav_url", ""),
-            "audio_m4a_url": call_data.get("audio_m4a_url", ""),
-            "stream_url": self.system_config_data.get("stream_url") or ""
-        }
-
-        post_body = post_body.format_map(mapping)
+        post_body = generate_mapped_content(post_body_template, alert_data, call_data, self.system_config_data.get("stream_url") or "", self.test_mode)
         return post_body
 
     def generate_facebook_comment(self, alert_data, call_data):
-        comment_body = self.system_config_data.get("facebook_comment_body", "{transcript}\n{stream_url}")
+        comment_body_template = self.system_config_data.get("facebook_comment_body", "{transcript}\n{stream_url}")
 
-        # Preprocess timestamp
-        current_time = datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S %Z')
+        comment_body = generate_mapped_content(comment_body_template, alert_data, call_data, self.system_config_data.get("stream_url") or "", self.test_mode)
 
-        trigger_list = "\n".join([alert.get("trigger_name") for alert in alert_data])
-
-        # Create a mapping
-        mapping = {
-            "trigger_list": trigger_list,
-            "timestamp": current_time,
-            "transcript": call_data.get("transcript", {}).get("transcript", ""),
-            "audio_wav_url": call_data.get("audio_wav_url", ""),
-            "audio_m4a_url": call_data.get("audio_m4a_url", ""),
-            "stream_url": self.system_config_data.get("stream_url") or ""
-        }
-
-        comment_body = comment_body.format_map(mapping)
         return comment_body

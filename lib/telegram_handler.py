@@ -6,6 +6,7 @@ import requests
 
 from lib.audio_file_handler import convert_wav_opus, download_wav_to_temp
 from lib.config_handler import decrypt_password
+from lib.helper_handler import generate_mapped_content
 
 module_logger = logging.getLogger('icad_alerting_api.telegram')
 
@@ -110,31 +111,9 @@ class TelegramAPI:
 
     def generate_post_body(self, alert_data, call_data):
         try:
-            post_body = "{timestamp}\n{trigger_list}\n{transcript}\niCAD Dispatch"
-            if self.test_mode:
-                post_body = f"TEST TEST TEST TEST TEST TEST\n\n{post_body}"
+            post_body_template = "{timestamp}\n{trigger_list}\n{transcript}\niCAD Dispatch"
 
-            # Convert the epoch timestamp to a datetime object
-            current_time_dt = datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone()
-
-            # Format the datetime object to a human-readable string with the timezone
-            formatted_current_time = current_time_dt.strftime('%Y-%m-%d %H:%M:%S %Z')
-
-            trigger_list = "\n".join(
-                [alert.get("trigger_name") for alert in alert_data if alert.get("telegram_enabled", False)])
-
-            # Create a mapping
-            mapping = {
-                "trigger_list": trigger_list,
-                "timestamp": formatted_current_time,
-                "timestamp_epoch": call_data.get("start_time"),
-                "transcript": call_data.get("transcript", {}).get("transcript", "No Transcript"),
-                "audio_wav_url": call_data.get("audio_wav_url", ""),
-                "audio_m4a_url": call_data.get("audio_m4a_url", ""),
-                "stream_url": self.system_config_data.get("stream_url", "")
-            }
-
-            post_body = post_body.format_map(mapping)
+            post_body = generate_mapped_content(post_body_template, alert_data, call_data, self.system_config_data.get("stream_url", ""), self.test_mode)
             return post_body
         except Exception as e:
             module_logger.error(f"<<Telegram>> <<Post>> failed Unable to create telegram post body. {e}")

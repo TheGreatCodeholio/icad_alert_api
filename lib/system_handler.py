@@ -49,7 +49,8 @@ SELECT
             '{"webhook_id": "', rsws.webhook_id, 
             '", "enabled": "', rsws.enabled,
             '", "webhook_url": "', rsws.webhook_url,
-            '", "webhook_headers": "', rsws.webhook_headers, '"}'
+            '", "webhook_headers": "', rsws.webhook_headers, '"}',
+            '", "webhook_body": "', rsws.webhook_body, '"}',
         ) SEPARATOR '|') AS system_webhooks,
     GROUP_CONCAT(
         DISTINCT CONCAT(
@@ -113,6 +114,7 @@ LEFT JOIN icad_alerting.radio_system_facebook_settings rsfs on rs.system_id = rs
                 webhook['enabled'] = bool(int(webhook['enabled']))
                 webhook['webhook_id'] = int(webhook['webhook_id'])
                 webhook['webhook_headers'] = json.loads(webhook['webhook_headers'])
+                webhook['webhook_body'] = json.loads(webhook['webhook_body'])
         else:
             system['system_webhooks'] = []
 

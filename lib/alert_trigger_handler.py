@@ -32,7 +32,8 @@ def get_alert_triggers(db, system_ids=None, trigger_id=None):
             '{"webhook_id": "', tw.webhook_id, 
             '", "enabled": "', tw.enabled,
             '", "webhook_url": "', tw.webhook_url,
-            '", "webhook_headers": "', tw.webhook_headers, '"}'
+            '", "webhook_headers": "', tw.webhook_headers, '"}',
+            '", "webhook_body": "', tw.webhook_body, '"}'
         ) SEPARATOR '|') AS trigger_webhooks,
         GROUP_CONCAT(
         DISTINCT CONCAT(
@@ -133,7 +134,8 @@ def get_alert_triggers(db, system_ids=None, trigger_id=None):
             for webhook in row_dict['trigger_webhooks']:
                 webhook['enabled'] = bool(int(webhook['enabled']))
                 webhook['webhook_id'] = int(webhook['webhook_id'])
-                webhook['webhook_headers'] = json.loads(webhook['webhook_headers'])  # Assuming this should be a dict
+                webhook['webhook_headers'] = json.loads(webhook['webhook_headers'])
+                webhook['webhook_body'] = json.loads(webhook['webhoook_body'])    # Assuming this should be a dict
         else:
             row_dict['trigger_webhooks'] = []
 

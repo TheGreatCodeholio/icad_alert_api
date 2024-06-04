@@ -9,6 +9,7 @@ from email.mime.text import MIMEText
 from email.utils import formataddr
 
 from lib.config_handler import decrypt_password
+from lib.helper_handler import generate_mapped_content
 
 module_logger = logging.getLogger('icad_alerting_api.email')
 
@@ -131,39 +132,23 @@ def generate_system_alert_email(global_config_data, system_config_data, alert_da
     stream_url = system_config_data.get("stream_url") or ""
 
     email_subject = system_config_data.get("email_alert_subject", "Dispatch Alert")
-    email_body = system_config_data.get("email_alert_body",
+    email_body_template = system_config_data.get("email_alert_body",
                                         '{trigger_list} Alerted at {timestamp}<br><br>{transcript}<br><br><a href="{audio_wav_url}">Click for Alert Audio</a><br><br><a href="{stream_url}">Click for Audio Stream</a>')
 
-    # Convert the epoch timestamp to a datetime object
-    current_time_dt = datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone()
+    email_body = generate_mapped_content(email_body_template, alert_data, call_data, stream_url, test_mode)
 
-    # Format the datetime object to a human-readable string with the timezone
-    current_time = current_time_dt.strftime('"%H:%M %b %d %Y" %Z')
-
-    if test_mode:
-        email_body = f"<font color=\"red\"><b>TEST TEST TEST TEST</b></font><br><br>{email_body}<br><br>"
-
-    trigger_list = ", ".join([triggered_alert.get("trigger_name") for triggered_alert in alert_data])
+    if email_body is None:
+        return None, None
 
     try:
-        mapping = {
-            "trigger_list": trigger_list,
-            "timestamp": current_time,
-            "timestamp_epoch": call_data.get("start_time"),
-            "transcript": call_data.get("transcript", {}).get("transcript", "No Transcript"),
-            "audio_wav_url": call_data.get("audio_wav_url", ""),
-            "audio_m4a_url": call_data.get("audio_m4a_url", ""),
-            "stream_url": stream_url
-        }
-
-        # Format the email subject and body using the mapping
-        email_subject = email_subject.format_map(mapping)
-        email_body = email_body.format_map(mapping)
-
+        email_subject = email_subject.format_map({
+            "trigger_list": ", ".join([triggered_alert.get("trigger_name") for triggered_alert in alert_data]),
+            "timestamp": datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone().strftime(
+                '"%H:%M %b %d %Y" %Z')
+        })
         return email_subject, email_body
-
     except Exception as e:
-        module_logger.exception(f"Failed to generate trigger alert email: {e}")
+        module_logger.exception(f"Failed to generate email subject: {e}")
         return None, None
 
 
@@ -178,42 +163,26 @@ def generate_trigger_alert_email(global_config_data, system_config_data, trigger
     """
     test_mode = global_config_data.get("general", {}).get("test_mode", True)
 
-    stream_url = trigger_data.get("stream_url") or ""
-    if not stream_url:
-        stream_url = system_config_data.get("stream_url") or ""
-
     email_subject = system_config_data.get("email_alert_subject", "Dispatch Alert - {trigger_name}")
-    email_body = system_config_data.get("email_alert_body",
+    email_body_template = system_config_data.get("email_alert_body",
                                         '{trigger_list} Alerted at {timestamp}<br><br>{transcript}<br><br><a href="{audio_wav_url}">Click for Alert Audio</a><br><br><a href="{stream_url}">Click for Audio Stream</a>')
 
-    # Convert the epoch timestamp to a datetime object
-    current_time_dt = datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone()
+    stream_url = trigger_data.get("stream_url") or system_config_data.get("stream_url", "")
 
-    # Format the datetime object to a human-readable string with the timezone
-    current_time = current_time_dt.strftime('"%H:%M %b %d %Y" %Z')
+    email_body = generate_mapped_content(email_body_template, alert_data, call_data, stream_url, test_mode)
 
-    if test_mode:
-        email_body = f"<font color=\"red\"><b>TEST TEST TEST TEST</b></font><br><br>{email_body}<br><br>"
-
-    trigger_list = ", ".join([triggered_alert.get("trigger_name") for triggered_alert in alert_data])
-    try:
-        mapping = {
-            "trigger_list": trigger_list,
-            "timestamp": current_time,
-            "timestamp_epoch": call_data.get("start_time"),
-            "transcript": call_data.get("transcript", {}).get("transcript", "No Transcript"),
-            "audio_wav_url": call_data.get("audio_wav_url", ""),
-            "audio_m4a_url": call_data.get("audio_m4a_url", ""),
-            "stream_url": stream_url
-        }
-
-        # Format the email subject and body using the mapping
-        email_subject = email_subject.format_map(mapping)
-        email_body = email_body.format_map(mapping)
-
-        return email_subject, email_body
-
-    except Exception as e:
-        module_logger.exception(f"Failed to generate trigger alert email: {e}")
+    if email_body is None:
         return None, None
+
+    try:
+        email_subject = email_subject.format_map({
+            "trigger_list": ", ".join([triggered_alert.get("trigger_name") for triggered_alert in alert_data]),
+            "timestamp": datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone().strftime(
+                '"%H:%M %b %d %Y" %Z')
+        })
+        return email_subject, email_body
+    except Exception as e:
+        module_logger.exception(f"Failed to generate email subject: {e}")
+        return None, None
+
 

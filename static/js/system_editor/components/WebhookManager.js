@@ -76,6 +76,30 @@ export class WebhookManager {
             parent: formWebhookHeaderGroup
         });
 
+        const formWebhookBodyGroup = UIManager.createElement('div', {
+            className: 'mb-3',  // Margin bottom for spacing
+            parent: newWebhookForm
+        });
+
+        UIManager.createElement('label', {
+            for: `system_${system_data.system_id}_webhook_body`,
+            className: 'form-label',
+            textContent: 'Webhook Body (JSON)',
+            parent: formWebhookBodyGroup
+        });
+
+        UIManager.createElement('textarea', {
+            id: `system_${system_data.system_id}_webhook_body`,
+            className: 'form-control',  // Bootstrap class for styling textareas
+            attributes: {
+                'placeholder': '{"key": "value"}',
+                'title': 'Webhook Body (JSON)',
+                'aria-label': 'Enter the body for the webhook in JSON format',
+                'rows': 5
+            },
+            parent: formWebhookBodyGroup
+        });
+
         // Create a container for the checkbox and the button, using flexbox
         const actionContainer = UIManager.createElement('div', {
             className: 'd-flex justify-content-between align-items-center mt-3',
@@ -236,6 +260,36 @@ export class WebhookManager {
             });
         headersFormGroup.appendChild(headersInput);
 
+        // Textarea for JSON body
+        const bodyFormGroup = document.createElement('div');
+        bodyFormGroup.className = 'mb-3';
+        bodyDiv.appendChild(bodyFormGroup);
+
+        const bodyLabel = document.createElement('label');
+        bodyLabel.className = 'form-label';
+        bodyLabel.textContent = 'Body (JSON)';
+        bodyFormGroup.appendChild(bodyLabel);
+
+        const bodyInput = document.createElement('textarea');
+        bodyInput.className = 'form-control';
+
+        // Ensure webhook_headers is a valid object or provide a default empty object
+        if (typeof webhook.webhook_body !== 'object' || webhook.webhook_body === null) {
+            webhook.webhook_body = '{}';
+        }
+
+        // Convert the JSON object to a formatted JSON string for editing
+        bodyInput.value = JSON.stringify(webhook.webhook_body, null, 4);
+        bodyInput.onblur = this.debounce(() => {
+            try {
+                webhook.webhook_body = JSON.parse(bodyInput.value);
+            } catch (e) {
+                UIManager.showAlert('Invalid JSON format', 'danger');
+            }
+
+            });
+        bodyFormGroup.appendChild(bodyInput);
+
         // Checkbox for Enabled status
         const checkDiv = document.createElement('div');
         checkDiv.className = 'mb-3 form-check form-switch';
@@ -283,6 +337,7 @@ export class WebhookManager {
     systemAddWebhook(UIManager, system_data) {
         const webhook_url = document.getElementById(`system_${system_data.system_id}_webhook_url`).value;
         const webhook_headers = document.getElementById(`system_${system_data.system_id}_webhook_headers`).value;
+        const webhook_body = document.getElementById(`system_${system_data.system_id}_webhook_body`).value;
         const enabled = document.getElementById(`system_${system_data.system_id}_webhook_enabled`).checked;
 
         // Validate the URL
@@ -308,6 +363,7 @@ export class WebhookManager {
             webhook_id: null,
             webhook_url: webhook_url,
             webhook_headers: webhook_headers,
+            webhook_body: webhook_body,
             enabled: enabled
         };
 
@@ -326,6 +382,7 @@ export class WebhookManager {
         // Clear the form inputs (Example only, needs actual implementation)
         document.getElementById(`system_${system_data.system_id}_webhook_url`).value = '';
         document.getElementById(`system_${system_data.system_id}_webhook_headers`).value = '{}';
+        document.getElementById(`system_${system_data.system_id}_webhook_body`).value = '{}';
         document.getElementById(`system_${system_data.system_id}_webhook_enabled`).checked = false;
     }
 
@@ -429,6 +486,30 @@ export class WebhookManager {
                 'rows': 5
             },
             parent: formWebhookHeaderGroup
+        });
+
+        const formWebhookBodyGroup = UIManager.createElement('div', {
+            className: 'mb-3',  // Margin bottom for spacing
+            parent: newWebhookForm
+        });
+
+        UIManager.createElement('label', {
+            for: `trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_body`,
+            className: 'form-label',
+            textContent: 'Webhook Body (JSON)',
+            parent: formWebhookBodyGroup
+        });
+
+        UIManager.createElement('textarea', {
+            id: `trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_body`,
+            className: 'form-control',  // Bootstrap class for styling textareas
+            attributes: {
+                'placeholder': '{"key": "value"}',
+                'title': 'Webhook Body (JSON)',
+                'aria-label': 'Enter the body for the webhook in JSON format',
+                'rows': 5
+            },
+            parent: formWebhookBodyGroup
         });
 
         // Create a container for the checkbox and the button, using flexbox
@@ -590,6 +671,36 @@ export class WebhookManager {
         });
         headersFormGroup.appendChild(headersInput);
 
+        // Textarea for JSON body
+        const bodyFormGroup = document.createElement('div');
+        bodyFormGroup.className = 'mb-3';
+        bodyDiv.appendChild(bodyFormGroup);
+
+        const bodyLabel = document.createElement('label');
+        bodyLabel.className = 'form-label';
+        bodyLabel.textContent = 'Body (JSON)';
+        bodyFormGroup.appendChild(bodyLabel);
+
+        const bodyInput = document.createElement('textarea');
+        bodyInput.className = 'form-control';
+
+        // Ensure webhook_headers is a valid object or provide a default empty object
+        if (typeof webhook.webhook_body !== 'object' || webhook.webhook_body === null) {
+            webhook.webhook_body = '{}';
+        }
+
+        // Convert the JSON object to a formatted JSON string for editing
+        bodyInput.value = JSON.stringify(webhook.webhook_body, null, 4);
+        bodyInput.onblur = this.debounce(() => {
+            try {
+                webhook.webhook_body = JSON.parse(bodyInput.value);
+            } catch (e) {
+                UIManager.showAlert('Invalid JSON format', 'danger');
+            }
+
+            });
+        bodyFormGroup.appendChild(bodyInput);
+
         // Checkbox for Enabled status
         const checkDiv = document.createElement('div');
         checkDiv.className = 'mb-3 form-check form-switch';
@@ -635,6 +746,7 @@ export class WebhookManager {
     triggerAddWebhook(UIManager, trigger_data) {
         const webhook_url = document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_url`).value;
         const webhook_headers = document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_headers`).value;
+        const webhook_body = document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_body`).value;
         const enabled = document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_enabled`).checked;
 
         // Validate the URL
@@ -660,6 +772,7 @@ export class WebhookManager {
             webhook_id: null,
             webhook_url: webhook_url,
             webhook_headers: webhook_headers,
+            webhook_body: webhook_body,
             enabled: enabled
         };
 
@@ -678,6 +791,7 @@ export class WebhookManager {
         // Clear the form inputs (Example only, needs actual implementation)
         document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_url`).value = '';
         document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_headers`).value = '{}';
+        document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_body`).value = '{}';
         document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_enabled`).checked = false;
     }
 

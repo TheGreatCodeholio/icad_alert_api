@@ -7,6 +7,7 @@ import logging
 
 
 from lib.config_handler import decrypt_password
+from lib.helper_handler import generate_mapped_content
 
 module_logger = logging.getLogger('icad_alerting_api.pushover')
 
@@ -47,12 +48,6 @@ class PushoverSender:
         test_mode = self.global_config_data.get("general", {}).get("test_mode", True)
 
         try:
-
-            # Convert the epoch timestamp to a datetime object
-            current_time_dt = datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone()
-
-            # Format the datetime object to a human-readable string with the timezone
-            current_time = current_time_dt.strftime('"%H:%M %b %d %Y" %Z')
 
             trigger_list = ", ".join([triggered_alert.get("trigger_name") for triggered_alert in alert_data])
 
@@ -111,23 +106,10 @@ class PushoverSender:
                 module_logger.error("<<Failed>> sending <<Pushover>> no system or trigger config data.")
                 return False
 
-            if test_mode:
-                pushover_body = f"<font color=\"red\"><b>TEST TEST TEST TEST</b></font><br><br>{pushover_body}"
-
-            # Create a mapping
-            mapping = {
-                "trigger_list": trigger_list,
-                "timestamp": current_time,
-                "timestamp_epoch": call_data.get("start_time"),
-                "transcript": call_data.get("transcript", {}).get("transcript", "No Transcript"),
-                "audio_wav_url": call_data.get("audio_wav_url", ""),
-                "audio_m4a_url": call_data.get("audio_m4a_url", ""),
-                "stream_url": stream_url
-            }
 
             # Use the mapping to format the strings
-            pushover_subject = pushover_subject.format_map(mapping)
-            pushover_body = pushover_body.format_map(mapping)
+            pushover_subject = generate_mapped_content(pushover_subject, alert_data, call_data, stream_url, test_mode)
+            pushover_body = generate_mapped_content(pushover_body, alert_data, call_data, stream_url, test_mode)
 
             if pushover_app_token and pushover_group_token:
                 request_result = self._send_request(pushover_app_token, pushover_group_token, pushover_subject,
