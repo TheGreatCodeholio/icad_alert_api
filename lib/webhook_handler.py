@@ -173,6 +173,9 @@ class WebHook:
 
             webhook_json = generate_mapped_json(webhook_body, alert_data, call_data, stream_url, test_mode)
 
+            # Log the webhook JSON to debug issues with the payload
+            module_logger.debug(f"Webhook JSON: {webhook_json}")
+
             post_result = self._send_request(webhook_url, wehbook_headers, webhook_json)
             return post_result
         except Exception as e:

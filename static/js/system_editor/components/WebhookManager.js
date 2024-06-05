@@ -7,7 +7,9 @@ export class WebhookManager {
         let timer;
         return (...args) => {
             clearTimeout(timer);
-            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+            timer = setTimeout(() => {
+                func.apply(this, args);
+            }, timeout);
         };
     }
 
@@ -127,11 +129,11 @@ export class WebhookManager {
         const checkBoxLabel = UIManager.createElement('label', {
             className: 'form-check-label',
             textContent: 'Webhook Disabled',
-            attributes: { 'for': `system_${system_data.system_id}_webhook_enabled` },
+            attributes: {'for': `system_${system_data.system_id}_webhook_enabled`},
             parent: checkBoxContainer
         });
 
-        checkBoxInput.addEventListener('change', function() {
+        checkBoxInput.addEventListener('change', function () {
             checkBoxLabel.textContent = this.checked ? 'Webhook Enabled' : 'Webhook Disabled';
         });
 
@@ -227,7 +229,7 @@ export class WebhookManager {
                 return;
             }
             webhook.webhook_url = urlInput.value
-            });
+        });
         urlFormGroup.appendChild(urlInput);
 
         // Textarea for JSON headers
@@ -257,7 +259,7 @@ export class WebhookManager {
                 UIManager.showAlert('Invalid JSON format', 'danger');
             }
 
-            });
+        });
         headersFormGroup.appendChild(headersInput);
 
         // Textarea for JSON body
@@ -275,7 +277,7 @@ export class WebhookManager {
 
         // Ensure webhook_headers is a valid object or provide a default empty object
         if (typeof webhook.webhook_body !== 'object' || webhook.webhook_body === null) {
-            webhook.webhook_body = '{}';
+            webhook.webhook_body = {};
         }
 
         // Convert the JSON object to a formatted JSON string for editing
@@ -287,7 +289,7 @@ export class WebhookManager {
                 UIManager.showAlert('Invalid JSON format', 'danger');
             }
 
-            });
+        });
         bodyFormGroup.appendChild(bodyInput);
 
         // Checkbox for Enabled status
@@ -309,7 +311,7 @@ export class WebhookManager {
         enabledLabel.textContent = webhook.enabled ? 'Webhook Enabled' : 'Webhook Disabled';
         checkDiv.appendChild(enabledLabel);
 
-        enabledCheckbox.addEventListener('change', function() {
+        enabledCheckbox.addEventListener('change', function () {
             webhook.enabled = enabledCheckbox.checked;
             enabledLabel.textContent = webhook.enabled ? 'Webhook Enabled' : 'Webhook Disabled';
         });
@@ -352,18 +354,28 @@ export class WebhookManager {
         }
 
         // Validate JSON for headers
+        let parsedHeaders;
         try {
-            JSON.parse(webhook_headers); // Validate JSON
+            parsedHeaders = JSON.parse(webhook_headers); // Validate JSON
         } catch (e) {
             UIManager.showAlert('Headers must be in valid JSON format', 'danger');
+            return;
+        }
+
+        // Validate JSON for body
+        let parsedBody;
+        try {
+            parsedBody = JSON.parse(webhook_body); // Validate JSON
+        } catch (e) {
+            UIManager.showAlert('Body must be in valid JSON format', 'danger');
             return;
         }
 
         const newWebhook = {
             webhook_id: null,
             webhook_url: webhook_url,
-            webhook_headers: webhook_headers,
-            webhook_body: webhook_body,
+            webhook_headers: parsedHeaders,
+            webhook_body: parsedBody,
             enabled: enabled
         };
 
@@ -377,12 +389,12 @@ export class WebhookManager {
 
         // Create and append the new webhook data
         // Here you would normally update the data structure or call an API
-        console.log('Webhook added:', {webhook_url, webhook_headers, enabled});
+        console.log('Webhook added:', {webhook_url, parsedHeaders, parsedBody, enabled});
 
         // Clear the form inputs (Example only, needs actual implementation)
         document.getElementById(`system_${system_data.system_id}_webhook_url`).value = '';
-        document.getElementById(`system_${system_data.system_id}_webhook_headers`).value = '{}';
-        document.getElementById(`system_${system_data.system_id}_webhook_body`).value = '{}';
+        document.getElementById(`system_${system_data.system_id}_webhook_headers`).value = '';
+        document.getElementById(`system_${system_data.system_id}_webhook_body`).value = '';
         document.getElementById(`system_${system_data.system_id}_webhook_enabled`).checked = false;
     }
 
@@ -410,7 +422,7 @@ export class WebhookManager {
                 }
             })
             .then(data => {
-                if(data.success){
+                if (data.success) {
                     UIManager.showAlert(data.message, "success");
                 } else {
                     UIManager.showAlert("Failed to save webhooks. Error: " + data.message, "danger");
@@ -539,11 +551,11 @@ export class WebhookManager {
         const checkBoxLabel = UIManager.createElement('label', {
             className: 'form-check-label',
             textContent: 'Webhook Disabled',
-            attributes: { 'for': `trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_enabled` },
+            attributes: {'for': `trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_enabled`},
             parent: checkBoxContainer
         });
 
-        checkBoxInput.addEventListener('change', function() {
+        checkBoxInput.addEventListener('change', function () {
             checkBoxLabel.textContent = this.checked ? 'Webhook Enabled' : 'Webhook Disabled';
         });
 
@@ -686,7 +698,7 @@ export class WebhookManager {
 
         // Ensure webhook_headers is a valid object or provide a default empty object
         if (typeof webhook.webhook_body !== 'object' || webhook.webhook_body === null) {
-            webhook.webhook_body = '{}';
+            webhook.webhook_body = {};
         }
 
         // Convert the JSON object to a formatted JSON string for editing
@@ -698,7 +710,7 @@ export class WebhookManager {
                 UIManager.showAlert('Invalid JSON format', 'danger');
             }
 
-            });
+        });
         bodyFormGroup.appendChild(bodyInput);
 
         // Checkbox for Enabled status
@@ -720,7 +732,7 @@ export class WebhookManager {
         enabledLabel.textContent = webhook.enabled ? 'Webhook Enabled' : 'Webhook Disabled';
         checkDiv.appendChild(enabledLabel);
 
-        enabledCheckbox.addEventListener('change', function() {
+        enabledCheckbox.addEventListener('change', function () {
             webhook.enabled = enabledCheckbox.checked;
             enabledLabel.textContent = webhook.enabled ? 'Webhook Enabled' : 'Webhook Disabled';
         });
@@ -761,18 +773,28 @@ export class WebhookManager {
         }
 
         // Validate JSON for headers
-        try {
-            JSON.parse(webhook_headers); // Validate JSON
-        } catch (e) {
-            UIManager.showAlert('Headers must be in valid JSON format', 'danger');
-            return;
-        }
+    let parsedHeaders;
+    try {
+        parsedHeaders = JSON.parse(webhook_headers); // Validate JSON
+    } catch (e) {
+        UIManager.showAlert('Headers must be in valid JSON format', 'danger');
+        return;
+    }
+
+    // Validate JSON for body
+    let parsedBody;
+    try {
+        parsedBody = JSON.parse(webhook_body); // Validate JSON
+    } catch (e) {
+        UIManager.showAlert('Body must be in valid JSON format', 'danger');
+        return;
+    }
 
         const newWebhook = {
             webhook_id: null,
             webhook_url: webhook_url,
-            webhook_headers: webhook_headers,
-            webhook_body: webhook_body,
+            webhook_headers: parsedHeaders,
+            webhook_body: parsedBody,
             enabled: enabled
         };
 
@@ -786,7 +808,7 @@ export class WebhookManager {
 
         // Create and append the new webhook data
         // Here you would normally update the data structure or call an API
-        console.log('Webhook added:', {webhook_url, webhook_headers, enabled});
+        console.log('Trigger Webhook added:', {webhook_url, parsedHeaders, parsedBody, enabled});
 
         // Clear the form inputs (Example only, needs actual implementation)
         document.getElementById(`trigger_${trigger_data.system_id}_${trigger_data.trigger_id}_webhook_url`).value = '';
@@ -800,7 +822,11 @@ export class WebhookManager {
         const save_url = `${UIManager.baseUrl}/admin/save_trigger_webhooks`;
 
         // Get the current webhook data from the system_data which should be updated throughout operations
-        const webhookData = {"trigger_id": trigger_data.trigger_id, "system_id": trigger_data.system_id, "trigger_webhooks": trigger_data.trigger_webhooks};
+        const webhookData = {
+            "trigger_id": trigger_data.trigger_id,
+            "system_id": trigger_data.system_id,
+            "trigger_webhooks": trigger_data.trigger_webhooks
+        };
 
         console.log(webhookData)
 
@@ -819,7 +845,7 @@ export class WebhookManager {
                 }
             })
             .then(data => {
-                if(data.success){
+                if (data.success) {
                     UIManager.showAlert(data.message, "success");
                 } else {
                     UIManager.showAlert("Failed to save webhooks. Error: " + data.message, "danger");

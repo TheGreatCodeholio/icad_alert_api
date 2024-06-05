@@ -84,5 +84,5 @@ def run_global_actions(global_config_data, system_config_data, alert_data, call_
     # Send to System Webhooks
     for webhook in system_config_data.get("system_webhooks", []):
         if webhook.get("enabled"):
-            WebHook(global_config_data, system_config_data).send_webhook(webhook.get("webhook_url"), webhook.get("webhook_headers", {}), webhook.get("webhook_headers", {}), alert_data, call_data)
+            WebHook(global_config_data, system_config_data).send_webhook(webhook.get("webhook_url"), webhook.get("webhook_headers", {}), webhook.get("webhook_body", {}), alert_data, call_data)
 
