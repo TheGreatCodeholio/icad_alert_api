@@ -49,8 +49,8 @@ SELECT
             '{"webhook_id": "', rsws.webhook_id, 
             '", "enabled": "', rsws.enabled,
             '", "webhook_url": "', rsws.webhook_url,
-            '", "webhook_headers": "', rsws.webhook_headers,
-            '", "webhook_body": "', rsws.webhook_body, '"}'
+            '", "webhook_headers": "', REPLACE(REPLACE(rsws.webhook_headers, '\\\\', '\\\\\\\\'), '\"', '\\\\"'),
+            '", "webhook_body": "', REPLACE(REPLACE(rsws.webhook_body, '\\\\', '\\\\\\\\'), '\"', '\\\\"'), '"}'
         ) SEPARATOR '|') AS system_webhooks,
     GROUP_CONCAT(
         DISTINCT CONCAT(
@@ -109,12 +109,22 @@ LEFT JOIN icad_alerting.radio_system_facebook_settings rsfs on rs.system_id = rs
         # Processing 'system_webhooks'
         if system['system_webhooks']:
             webhook_items = system['system_webhooks'].split('|')
-            system['system_webhooks'] = [json.loads(webhook.strip()) for webhook in webhook_items if webhook.strip()]
-            for webhook in system['system_webhooks']:
-                webhook['enabled'] = bool(int(webhook['enabled']))
-                webhook['webhook_id'] = int(webhook['webhook_id'])
-                webhook['webhook_headers'] = json.loads(webhook['webhook_headers'])
-                webhook['webhook_body'] = json.loads(webhook['webhook_body'])
+            try:
+                system['system_webhooks'] = [json.loads(webhook.strip()) for webhook in webhook_items if webhook.strip()]
+                for webhook in system['system_webhooks']:
+                    webhook['enabled'] = bool(int(webhook['enabled']))
+                    webhook['webhook_id'] = int(webhook['webhook_id'])
+                    webhook['webhook_headers'] = json.loads(webhook['webhook_headers'])
+                    webhook['webhook_body'] = json.loads(webhook['webhook_body'])
+            except KeyError as e:
+                module_logger.error(f"KeyError: Missing key in the result set: {e}", exc_info=True)
+                system['system_webhooks'] = []
+            except json.JSONDecodeError as e:
+                module_logger.error(f"JSONDecodeError: Error decoding JSON: {e}", exc_info=True)
+                system['system_webhooks'] = []
+            except Exception as e:
+                module_logger.error(f"Error getting system webhooks: {e}", exc_info=True)
+                system['system_webhooks'] = []
         else:
             system['system_webhooks'] = []
 

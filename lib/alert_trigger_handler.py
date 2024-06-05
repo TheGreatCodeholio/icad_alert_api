@@ -32,8 +32,8 @@ def get_alert_triggers(db, system_ids=None, trigger_id=None):
             '{"webhook_id": "', tw.webhook_id, 
             '", "enabled": "', tw.enabled,
             '", "webhook_url": "', tw.webhook_url,
-            '", "webhook_headers": "', tw.webhook_headers, 
-            '", "webhook_body": "', tw.webhook_body, '"}'
+            '", "webhook_headers": "', REPLACE(REPLACE(tw.webhook_headers, '\\\\', '\\\\\\\\'), '\"', '\\\\"'),
+            '", "webhook_body": "', REPLACE(REPLACE(tw.webhook_body, '\\\\', '\\\\\\\\'), '\"', '\\\\"'), '"}'
         ) SEPARATOR '|') AS trigger_webhooks,
         GROUP_CONCAT(
         DISTINCT CONCAT(
@@ -130,23 +130,45 @@ def get_alert_triggers(db, system_ids=None, trigger_id=None):
         # Processing 'trigger_webhooks'
         if row_dict['trigger_webhooks']:
             webhook_items = row_dict['trigger_webhooks'].split('|')
-            row_dict['trigger_webhooks'] = [json.loads(webhook.strip()) for webhook in webhook_items if webhook.strip()]
-            for webhook in row_dict['trigger_webhooks']:
-                webhook['enabled'] = bool(int(webhook['enabled']))
-                webhook['webhook_id'] = int(webhook['webhook_id'])
-                webhook['webhook_headers'] = json.loads(webhook['webhook_headers'])
-                webhook['webhook_body'] = json.loads(webhook['webhoook_body'])    # Assuming this should be a dict
+            try:
+                row_dict['trigger_webhooks'] = [json.loads(webhook.strip()) for webhook in webhook_items if webhook.strip()]
+                for webhook in row_dict['trigger_webhooks']:
+                    webhook['enabled'] = bool(int(webhook['enabled']))
+                    webhook['webhook_id'] = int(webhook['webhook_id'])
+                    webhook['webhook_headers'] = json.loads(webhook['webhook_headers'])
+                    webhook['webhook_body'] = json.loads(webhook['webhook_body'])    # Assuming this should be a dict
+            except KeyError as e:
+                module_logger.error(f"KeyError: Missing key in the result set: {e}", exc_info=True)
+                row_dict['trigger_webhooks'] = []
+            except json.JSONDecodeError as e:
+                module_logger.error(f"JSONDecodeError: Error decoding JSON for Webhooks: {e}", exc_info=True)
+                row_dict['trigger_webhooks'] = []
+            except Exception as e:
+                module_logger.error(f"Error getting alert trigger webhooks: {e}", exc_info=True)
+                row_dict['trigger_webhooks'] = []
         else:
             row_dict['trigger_webhooks'] = []
 
         # Processing 'trigger_alert_filters'
         if row_dict['trigger_alert_filters']:
             alert_filter_items = row_dict['trigger_alert_filters'].split('|')
-            row_dict['trigger_alert_filters'] = [json.loads(alert_filter.strip()) for alert_filter in alert_filter_items if alert_filter.strip()]
-            for alert_filter in row_dict['trigger_alert_filters']:
-                alert_filter['enabled'] = bool(int(alert_filter['enabled']))
-                alert_filter['alert_filter_name'] = alert_filter['alert_filter_name']
-                alert_filter['alert_filter_id'] = int(alert_filter['alert_filter_id'])
+            try:
+                row_dict['trigger_alert_filters'] = [json.loads(alert_filter.strip()) for alert_filter in alert_filter_items if alert_filter.strip()]
+                for alert_filter in row_dict['trigger_alert_filters']:
+                    alert_filter['enabled'] = bool(int(alert_filter['enabled']))
+                    alert_filter['alert_filter_name'] = alert_filter['alert_filter_name']
+                    alert_filter['alert_filter_id'] = int(alert_filter['alert_filter_id'])
+
+            except KeyError as e:
+                module_logger.error(f"KeyError: Missing key in the result set: {e}", exc_info=True)
+                row_dict['trigger_alert_filters'] = []
+            except json.JSONDecodeError as e:
+                module_logger.error(f"JSONDecodeError: Error decoding JSON: {e}", exc_info=True)
+                row_dict['trigger_alert_filters'] = []
+            except Exception as e:
+                module_logger.error(f"Error getting alert triggers: {e}", exc_info=True)
+                row_dict['trigger_alert_filters'] = []
+
         else:
             row_dict['trigger_alert_filters'] = []
 
@@ -181,18 +203,19 @@ def add_alert_trigger(db, trigger_data):
               trigger_data.get('ignore_time', 300.0), trigger_data.get('stream_url') or None,
               0, 0, enabled)
 
-    result = db.execute_commit(query, params)
+    result = db.execute_commit(query, params, return_row=True)
 
     if result.get("success"):
-        insert_alert_trigger_default(db, trigger_data)
+        trigger_id = trigger_data.get("result")
+        insert_alert_trigger_default(db, trigger_id)
 
     return result
 
 
-def insert_alert_trigger_default(db, trigger_data):
+def insert_alert_trigger_default(db, trigger_id):
     db.execute_commit(
         "INSERT INTO alert_trigger_pushover_settings (trigger_id) VALUES (%s)",
-        (trigger_data.get('trigger_id'),)
+        (trigger_id,)
     )
 
 

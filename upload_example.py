@@ -8,7 +8,7 @@ JSON_FILE_PATH = '/home/ian/PycharmProjects/icad_alert_api/test_json/gvems.json'
 
 ALERT_CONFIG = {
     "api_url": "https://icad.icarey.net/process_alert",
-    "api_key": "8085febc-a18e-46df-9d23-e32697cae901"
+    "api_key": "21a98c45-2505-49f6-88d9-fb4a84cabdf7"
 }
 
 

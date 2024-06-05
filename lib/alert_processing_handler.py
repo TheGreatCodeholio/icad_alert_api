@@ -14,6 +14,7 @@ def process_call_data(db, rd, global_config_data, system_data, call_data):
     process_result = {"alert_result": []}
     alert_result = check_alert_triggers(db, rd, global_config_data, system_data, call_data)
     process_result["alert_result"] = alert_result
+    module_logger.debug(alert_result)
     if len(alert_result) >= 1:
         # Process Global System Alerts
         run_global_actions(global_config_data, system_data, alert_result, call_data)
@@ -133,6 +134,7 @@ def check_alert_triggers(db, rd, global_config_data, system_data, call_data):
             triggered_alerts.append(alert_data)
 
             # Start Alerting Process For Tones
+            module_logger.debug(alert_data)
             run_trigger_actions(global_config_data, system_data, trigger, [alert_data], call_data)
 
     return triggered_alerts
@@ -140,10 +142,6 @@ def check_alert_triggers(db, rd, global_config_data, system_data, call_data):
 
 def check_two_tone_triggers(alert_trigger, call_data):
     matches_found = []
-
-    # Simplify the extraction of match_list
-    match_list = [(tone['detected'][0], tone['detected'][1], tone["tone_id"],
-                   tone["tone_a_length"], tone["tone_b_length"]) for tone in call_data.get("tones", {}).get("two_tone", [])]
 
     a_tone, b_tone = alert_trigger.get("two_tone_a"), alert_trigger.get("two_tone_b")
     # Skip the trigger if either two_tone_a or tow_tone_b is missing
@@ -156,22 +154,18 @@ def check_two_tone_triggers(alert_trigger, call_data):
     tone_a_length = alert_trigger.get("two_tone_a_length", 0.8)
     tone_b_length = alert_trigger.get("two_tone_b_length", 2.3)
 
-    for tone in match_list:
+    for tone in call_data.get("tones", {}).get("two_tone", []):
         if a_tone == -1 and b_tone == -1:
             match_a, match_b = True, True
             length_match = True
         else:
-            match_a = is_within_range(tone[0], detector_ranges[0]) if a_tone != -1 else True
-            match_b = is_within_range(tone[1], detector_ranges[1]) if b_tone != -1 else True
-            length_match = tone[3] >= tone_a_length and tone[4] >= tone_b_length
+            match_a = is_within_range(tone['detected'][0], detector_ranges[0]) if a_tone != -1 else True
+            match_b = is_within_range(tone['detected'][1], detector_ranges[1]) if b_tone != -1 else True
+            length_match = tone['tone_a_length'] >= tone_a_length and tone['tone_b_length'] >= tone_b_length
 
         if match_a and match_b and length_match:
-            match_data = {
-                "tone_id": tone[2],
-                "tones_matched": f'{tone[0]}, {tone[1]}'
-            }
 
-            matches_found.append(match_data)
+            matches_found.append(tone)
 
             module_logger.debug(f"Two Tone Match found for {alert_trigger.get('trigger_name')}")
 
@@ -181,9 +175,6 @@ def check_two_tone_triggers(alert_trigger, call_data):
 def check_long_tone_triggers(alert_trigger, call_data):
     matches_found = []
 
-    # Extract long_tone details
-    match_list = [(tone['detected'], tone["tone_id"], tone["length"])
-                  for tone in call_data.get("tones", {}).get("long_tone", [])]
 
     long_tone = alert_trigger.get("long_tone")
     if not long_tone:
@@ -193,21 +184,16 @@ def check_long_tone_triggers(alert_trigger, call_data):
     required_length = alert_trigger.get("long_tone_length", 0)
     tone_range = (long_tone - tolerance, long_tone + tolerance)
 
-    for tone in match_list:
+    for tone in call_data.get("tones", {}).get("long_tone", []):
         if long_tone == -1:
             match_tone = True
             length_match = True
         else:
-            match_tone = is_within_range(tone[0], tone_range)
-            length_match = tone[2] >= required_length
+            match_tone = is_within_range(tone["detected"], tone_range)
+            length_match = tone["long_tone_length"] >= required_length
 
         if match_tone and length_match:
-            match_data = {
-                "tone_id": tone[1],
-                "tones_matched": f'{tone[0]}'
-            }
-
-            matches_found.append(match_data)
+            matches_found.append(tone)
 
             module_logger.debug(f"Match found for {alert_trigger.get('trigger_name')}")
 
@@ -232,22 +218,18 @@ def check_hi_low_tone_triggers(alert_trigger, call_data):
     tone_range = [(hi_tone - tolerance_hi, hi_tone + tolerance_hi),
                   (low_tone - tolerance_low, low_tone + tolerance_low)]
 
-    for tone in match_list:
+    for tone in call_data.get("tones", {}).get("hl_tone", []):
         if hi_tone == -1 and low_tone == -1:
             match_hi, match_low = True, True
             alternations_match = True
         else:
-            match_hi = is_within_range(tone[0], tone_range[0]) if hi_tone != -1 else True
-            match_low = is_within_range(tone[1], tone_range[1]) if low_tone != -1 else True
-            alternations_match = tone[3] >= min_alternations
+            match_hi = is_within_range(tone['detected'][0], tone_range[0]) if hi_tone != -1 else True
+            match_low = is_within_range(tone['detected'][1], tone_range[1]) if low_tone != -1 else True
+            alternations_match = tone['alternations'] >= min_alternations
 
         if match_hi and match_low and alternations_match:
-            match_data = {
-                "tone_id": tone[2],
-                "tones_matched": f'{tone[0]}, {tone[1]}'
-            }
 
-            matches_found.append(match_data)
+            matches_found.append(tone)
 
             module_logger.debug(f"Match found for {alert_trigger.get('trigger_name')}")
 
