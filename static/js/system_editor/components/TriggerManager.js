@@ -5,6 +5,11 @@ export class TriggerManager {
 
     renderTriggersPage(UIManager, system_data, filter_data) {
         console.log(system_data)
+        let return_link = document.getElementById('return_link');
+
+        return_link.href = `${UIManager.baseUrl}/admin/systems?system_id=${system_data.system_id}`
+        return_link.textContent = `Back`
+
         UIManager.trigger_title.innerText = `${system_data.system_name} Triggers`
         UIManager.trigger_form_system_id.value = system_data.system_id
         // UIManager.new_trigger_button.onclick = () => {

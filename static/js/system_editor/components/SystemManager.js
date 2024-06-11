@@ -3,7 +3,7 @@ export class SystemManager {
         this.region = window.region;
     }
 
-    addSystemToPage(UIManager, system_data) {
+    addSystemToPage(UIManager, system_data, menu_open=false) {
         if (!system_data) {
             return
         }
@@ -16,7 +16,7 @@ export class SystemManager {
             attributes: {
                 'data-bs-toggle': 'collapse',
                 'data-bs-target': `#system_${system_data.system_id}-collapse`,
-                'aria-expanded': 'false'
+                'aria-expanded': menu_open ? 'true' : 'false'
             },
             textContent: system_data.system_name,
             parent: systemListItem
@@ -24,7 +24,7 @@ export class SystemManager {
 
         const systemButtonCollapse = UIManager.createElement('div', {
             id: `system_${system_data.system_id}-collapse`,
-            className: 'collapse',
+            className: `collapse ${menu_open ? 'show' : ''}`,
             parent: systemListItem
         });
 
@@ -52,7 +52,7 @@ export class SystemManager {
 
         const systemGeneralTabContent = UIManager.createElement('div', {
             id: `system_${system_data.system_id}_general-tab-pane`,
-            className: 'tab-pane fade',
+            className: `tab-pane fade ${menu_open ? 'show active' : ''}`,
             attributes: {
                 'role': '',
                 'aria-labelledby': `system_${system_data.system_id}_general-tab`,

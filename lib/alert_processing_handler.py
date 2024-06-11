@@ -249,6 +249,8 @@ def check_alert_filter_triggers(db, alert_trigger, call_data):
     alert_filter_data = get_alert_filters(db, alert_filter_id=alert_filter_id)
 
     keywords = alert_filter_data.get("result", [])[0].get("filter_keywords")
+    alert_filter_id = alert_filter_data.get("result", [])[0].get("alert_filter_id")
+    alert_filter_name = alert_filter_data.get("result", [])[0].get("alert_filter_name")
     module_logger.debug(keywords)
 
     transcript = call_data.get("transcript", []).get("transcript", "")
@@ -270,7 +272,7 @@ def check_alert_filter_triggers(db, alert_trigger, call_data):
                 if keyword['is_excluded']:
                     exclusion_detected = True
                 elif not keyword['is_excluded']:
-                    matches_found.append({'keyword': normalized_keyword})
+                    matches_found.append({'keyword': keyword['keyword'], "alert_filter_id": alert_filter_id, "alert_filter_name": alert_filter_name})
 
     # Check if exclusion was detected, if so, return an empty list
     if exclusion_detected:

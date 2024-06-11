@@ -64,8 +64,6 @@ export class SystemEditor {
 
     async initEditor() {
 
-
-
         console.log(this.base_url)
         console.log(this.url_path)
 
@@ -79,7 +77,7 @@ export class SystemEditor {
 
             this.HttpManager.fetchData(request_url, options)
                 .then(systems_data => {
-                    this.UIManager.initSystemsPage(systems_data);
+                    this.UIManager.initSystemsPage(systems_data, this.system_id);
                 })
                 .catch(error => {
                     this.UIManager.showAlert(`Error fetching systems: ${error}`, "danger")

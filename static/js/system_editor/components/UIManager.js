@@ -21,10 +21,14 @@ export class UIManager {
         this.createElement = this.createElement.bind(this);
     }
 
-    initSystemsPage(systems_data) {
+    initSystemsPage(systems_data, system_id= null) {
         if (systems_data.result){
             systems_data.result.forEach(system_data => {
-                this.SystemManager.addSystemToPage(this, system_data)
+                let menu_open = false;
+                if (system_id) {
+                    menu_open = system_data.system_id.toString() === system_id.toString();
+                }
+                this.SystemManager.addSystemToPage(this, system_data, menu_open)
             });
         }
 

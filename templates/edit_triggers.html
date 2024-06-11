@@ -12,6 +12,9 @@
             <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white">
                 <ul id="trigger_sidebar" class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item mb-1">
+                        <a class="custom-return-link" id="return_link" href=""></a>
+                    </li>
+                    <li class="nav-item mb-1">
                         <button class="nav-link" id="trigger-add-tab" data-bs-toggle="tab"
                                 data-bs-target="#trigger-add-tab-pane" type="button" role="tab"
                                 aria-controls="trigger-add-tab-pane" aria-selected="false">Add Trigger
@@ -125,7 +128,7 @@
         window.region = "{{ region }}"
     </script>
     <script type="module">
-        import {SystemEditor} from '{{ url_for('static', filename='js/system_editor/editor.js') }}';
+        import {SystemEditor} from '{{ url_for('static', filename='js/system_editor/editor.js') }}'; // Adjust the import path as necessary
         const editor = new SystemEditor();
     </script>
 {% endblock %}

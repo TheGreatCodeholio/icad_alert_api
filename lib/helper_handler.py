@@ -67,7 +67,7 @@ def generate_mapped_json(template, alert_data, call_data, stream_url, test_mode)
     current_time_dt = datetime.fromtimestamp(call_data.get("start_time", 0), tz=timezone.utc).astimezone()
 
     # Format the datetime object to a human-readable string with the timezone
-    current_time = current_time_dt.strftime('"%H:%M %b %d %Y" %Z')
+    current_time = current_time_dt.strftime('%H:%M %b %d %Y %Z')
 
     trigger_list = ", ".join([triggered_alert.get("trigger_name") for triggered_alert in alert_data])
 
@@ -205,14 +205,17 @@ def generate_tone_data_report(tone_data_list, report_format='html'):
             else:
                 report += "**Alert Filters:**\n"
 
-            for idx, filter_match in enumerate(tone_data['alert_filter'], 1):
-                if report_format == 'html':
-                    report += f"{idx}. Filter ID: {filter_match['filter_id']}<br>"
-                    report += f"&nbsp;&nbsp;&nbsp;- Filter Name: {filter_match['filter_name']}<br>"
-                    report += f"&nbsp;&nbsp;&nbsp;- Matched Text: {filter_match['matched_text']}<br>"
-                else:
-                    report += f"{idx}. Filter ID: {filter_match['filter_id']}\n"
-                    report += f"   - Filter Name: {filter_match['filter_name']}\n"
-                    report += f"   - Matched Text: {filter_match['matched_text']}\n"
+            matched_keywords = ", ".join(keyword_match.get("keyword") for keyword_match in tone_data['alert_filter'])
+
+            if report_format == 'html':
+                report += f"Filter ID: {tone_data['alert_filter'][0]['alert_filter_id']}<br>"
+                report += f"&nbsp;&nbsp;&nbsp;- Filter Name: {tone_data['alert_filter'][0]['alert_filter_name']}<br>"
+                report += f"&nbsp;&nbsp;&nbsp;- Matched Keywords: {matched_keywords}<br>"
+            else:
+                report += f"Filter ID: {tone_data['alert_filter'][0]['alert_filter_id']}\n"
+                report += f"   - Filter Name: {tone_data['alert_filter'][0]['alert_filter_name']}\n"
+                report += f"   - Matched Text: {matched_keywords}\n"
+
+
 
     return report

@@ -81,6 +81,16 @@ tr td.form-check.form-switch {
     display: table-cell;
 }
 
+/* Ensure that all anchor links with the class 'custom-link' are white and have no underline */
+.custom-return-link {
+    color: white;
+    text-decoration: none;
+}
+
+.custom-return-link:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
 @media (min-width: 768px) {
     #sidebarCollapse {
         display: block !important; /* Always display sidebar on larger screens */

@@ -958,6 +958,7 @@ def process_alert():
     if call_data:
         system_data = get_systems(db, system_short_name=call_data.get('short_name'))
         if system_data.get('success') and system_data.get("result", {}):
+            logger.debug(system_data.get('result', {}))
             ## Start alert check to see if we match any of the alert triggers
             process_result = process_call_data(db, rd, config_data, system_data.get("result")[0], call_data)
             result["success"] = True
