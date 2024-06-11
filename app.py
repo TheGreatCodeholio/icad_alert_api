@@ -150,33 +150,41 @@ def clear_loop_manager(system_short_name, action="start"):
 def clear_old_items(system_short_name):
     stop_signal = stop_signals.get(system_short_name, Event())
     while not stop_signal.is_set():
-        time.sleep(1)  # Sleep to prevent a tight loop that hogs the CPU
+        try:
+            time.sleep(1)  # Sleep to prevent a tight loop that hogs the CPU
 
-        # Fetch the current list of detections
-        qc_detector_list = get_active_alerts_cache(rd, f"icad_current_alerts:{system_short_name}")
-        current_time = time.time()
-        if len(qc_detector_list) == 0:
-            # logger.warning(f"Empty Detector List")
-            continue  # Skip this iteration if list is empty
+            # Fetch the current list of detections
+            qc_detector_list = get_active_alerts_cache(rd, f"icad_current_alerts:{system_short_name}")
+            current_time = time.time()
+            if len(qc_detector_list) == 0:
+                continue  # Skip this iteration if list is empty
 
-        updated_list = []
-        for item in qc_detector_list:
-            # Calculate the expiration time for each item
-            expire_time = item['last_detected'] + item['ignore_seconds']
-            if current_time < expire_time:
-                # If the item hasn't expired, add it to the updated list
-                updated_list.append(item)
+            updated_list = []
+            for item in qc_detector_list:
+                try:
+                    # Calculate the expiration time for each item
+                    expire_time = item['last_detected'] + item['ignore_seconds']
+                    if current_time < expire_time:
+                        # If the item hasn't expired, add it to the updated list
+                        updated_list.append(item)
+                except KeyError as e:
+                    logger.error(f"KeyError in item processing: {e}")
+                except Exception as e:
+                    logger.error(f"Unexpected error in item processing: {e}")
 
-        # If the updated list is shorter, some items were removed
-        if len(updated_list) < len(qc_detector_list):
-            logger.warning(f"Removing {len(qc_detector_list) - len(updated_list)}")
-            # Clear the old list
-            delete_active_alerts_cache(rd, f"icad_current_alerts:{system_short_name}")
+            # If the updated list is shorter, some items were removed
+            if len(updated_list) < len(qc_detector_list):
+                logger.warning(f"Removing {len(qc_detector_list) - len(updated_list)} items")
+                # Clear the old list
+                delete_active_alerts_cache(rd, f"icad_current_alerts:{system_short_name}")
 
-            # Add the updated items back, if any
-            if updated_list:
-                # Push all items at once to the list
-                rd.lpush(f"icad_current_alerts:{system_short_name}", *updated_list)
+                # Add the updated items back, if any
+                if updated_list:
+                    # Push all items at once to the list
+                    rd.lpush(f"icad_current_alerts:{system_short_name}", *updated_list)
+
+        except Exception as e:
+            logger.error(f"Unexpected error in clear_old_items loop: {e}")
 
     logger.info(f"Stopped Clear Loop for {system_short_name}")
 

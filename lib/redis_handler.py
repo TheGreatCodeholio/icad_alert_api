@@ -464,11 +464,13 @@ class RedisCache:
             # Deserialize the values before returning them
             deserialized_values = [self.deserialize_from_redis(value) for value in values]
 
-            #module_logger.debug(
-            #    f"Redis LRange on List {list_name} <<success>>: Retrieved values: {deserialized_values}")
             return {'success': True, 'message': 'success', 'result': deserialized_values}
         except redis.RedisError as error:
             error_msg = f"Redis LRange on List {list_name} <<failed>>, error: {error}"
+            module_logger.error(error_msg)
+            return {'success': False, 'message': error_msg}
+        except Exception as e:
+            error_msg = f"Unexpected error in lrange: {e}"
             module_logger.error(error_msg)
             return {'success': False, 'message': error_msg}
 
@@ -684,9 +686,10 @@ class RedisCache:
 
         # Try JSON deserialization
         try:
-            return json.loads(value)
-        except (ValueError, TypeError):
-            pass
+            result = json.loads(value)
+            return result
+        except (ValueError, TypeError) as e:
+            module_logger.debug(f"JSON deserialization error: {e}")
 
         # Handle common string representations
         value_lower = value.lower()
@@ -699,27 +702,32 @@ class RedisCache:
 
         # Try parsing as integer
         try:
-            return int(value)
-        except ValueError:
-            pass
+            result = int(value)
+            return result
+        except ValueError as e:
+            module_logger.debug(f"Integer parsing error: {e}")
+
 
         # Try parsing as float
         try:
-            return float(value)
-        except ValueError:
-            pass
+            result = float(value)
+            return result
+        except ValueError as e:
+            module_logger.debug(f"Float parsing error: {e}")
 
         # Try parsing as datetime object
         try:
-            return datetime.datetime.fromisoformat(value)
-        except ValueError:
-            pass
+            result = datetime.datetime.fromisoformat(value)
+            return result
+        except (ValueError, TypeError) as e:
+            module_logger.debug(f"Datetime parsing error: {e}")
 
         # Try parsing as date object
         try:
-            return datetime.date.fromisoformat(value)
-        except ValueError:
-            pass
+            result = datetime.date.fromisoformat(value)
+            return result
+        except (ValueError, TypeError) as e:
+            module_logger.debug(f"Date parsing error: {e}")
 
         # If no other type matched, return the original string
         return value

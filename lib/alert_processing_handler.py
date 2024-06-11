@@ -340,7 +340,9 @@ def get_active_alerts_cache(rd, list_name):
             return []
     except redis.RedisError as error:
         module_logger.error(f"Error retrieving list {list_name}: {error}")
-        return []
+    except Exception as e:
+        module_logger.error(f"Unexpected error in get_active_alerts_cache: {e}")
+    return []
 
 
 # Helper function to normalize text
